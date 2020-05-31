@@ -1,17 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-
-    <IsPackable>false</IsPackable>
-    <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
-
+  <ItemGroup>
+    <ProjectReference Include="..\src\App.fsproj" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="Tests.fs" />
+    <Compile Include="SolverTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="fscheck" Version="2.14.2" />
     <PackageReference Include="fscheck.xunit" Version="2.14.2" />
@@ -20,9 +18,4 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
     <PackageReference Include="coverlet.collector" Version="1.2.0" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\src\App.fsproj" />
-  </ItemGroup>
-
 </Project>

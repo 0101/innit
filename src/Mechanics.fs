@@ -33,7 +33,7 @@ let axis (ax, ay) (bx, by) =
     else failwith "Non continuous path"
 
 
-let SegmentPath (path: Path) : Path list =
+let SegmentPath path =
     let rec loop result currentChunk restOfPath =
         match currentChunk, restOfPath with
         | [],        [] -> result

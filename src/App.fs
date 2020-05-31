@@ -45,16 +45,20 @@ let init () =
         ))
         CurrentAnimations = []
         AnimationQueue = []
-        Timer = None
+        AnimationTimer = None
         Items = RandomItems random (gridW, gridH) [
             000, a [ Href ContactEmail; Class "mail" ] [ ]
             024, a [ Href ScLink; Target "_blank"; Class "sc" ] [ ]
             192, a [ Href GhLink; Target "_blank"; Class "gh" ] [ ]
         ]
+        LastUpdate = DateTime.Now
     }, Cmd.none
 
 
 let update (msg : Msg) (state : State) =
+
+    let state = if msg = Tock then state else { state with LastUpdate = DateTime.Now }
+
     let state =
         match msg with
 
@@ -77,14 +81,22 @@ let update (msg : Msg) (state : State) =
                          AnimationQueue = animationQueue
                          EmptyField = newEmptyField }
 
-        | StartedTimer t -> { state with Timer = Some t }
+        | StartedTimer t -> { state with AnimationTimer = Some t }
 
         | StopTimer t ->
             Browser.Dom.window.clearInterval t
-            { state with Timer = None }
+            { state with AnimationTimer = None }
+
+        | Tock ->
+            if (DateTime.Now - state.LastUpdate).TotalSeconds > IdleSeconds then
+                Browser.Dom.console.info(sprintf "Solution: %A" (Solver.SolveState state))
+                { state with AnimationQueue = Solver.SolveState state }
+            else state
+
+
 
     let cmd =
-        match state.Timer, state.CurrentAnimations, state.AnimationQueue with
+        match state.AnimationTimer, state.CurrentAnimations, state.AnimationQueue with
         | None, [], [] -> Cmd.none
         | None, _, _  -> Cmd.ofSub (fun dispatch ->
             let timer = Browser.Dom.window.setInterval((fun _ -> dispatch Tick), 1000 / 40)
@@ -116,8 +128,14 @@ let resize _ =
             PageResize dims |> dispatch))
 
 
+let slowTimer _ =
+    Cmd.ofSub (fun dispatch ->
+        Browser.Dom.window.setInterval((fun _ -> dispatch Tock), 3000) |> ignore)
+
+
 Program.mkProgram init update view
 |> Program.withSubscription resize
+|> Program.withSubscription slowTimer
 |> Program.withReactSynchronous "elmish-app"
-// |> Program.withConsoleTrace
+|> Program.withConsoleTrace
 |> Program.run

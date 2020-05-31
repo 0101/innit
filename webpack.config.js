@@ -18,9 +18,7 @@ module.exports = {
         host: '0.0.0.0',
         allowedHosts: [
             '0.0.0.0',
-            '192.168.1.217',
-            'subdomain2.host.com',
-            'host2.com'
+            '192.168.1.217'
           ]
     },
     module: {

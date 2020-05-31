@@ -1,12 +1,8 @@
 [<AutoOpen>]
 module Types
 
-
-open Elmish
-open Elmish.React
 open Fable.React
-open Fable.React.Props
-
+open System
 
 [<Measure>] type Sq
 [<Measure>] type Px
@@ -49,8 +45,9 @@ type State = {
     Grid: Field[][]
     CurrentAnimations: Animation list
     AnimationQueue: Path list
-    Timer: float option
+    AnimationTimer: float option
     Items: HiddenItem list
+    LastUpdate: DateTime
 }
 
 type Msg =
@@ -59,3 +56,4 @@ type Msg =
 | StartedTimer of float
 | StopTimer of float
 | Tick
+| Tock

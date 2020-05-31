@@ -17,6 +17,8 @@ let PieceColor (random : Random) = sprintf "hsl(0, 0%%, %f%%)" (random.NextDoubl
 
 let InitialEmptyField = 0, 0
 
-let ContactEmail = "nbjmup;nbjmAjooju/d{" |> Seq.map (int >> ((+) -1) >> char >> string ) |> String.concat ""
+let ContactEmail = "nbjmup;nbjmAjooju/d{" |> Seq.map (int >> ((+) -1) >> char >> string) |> String.concat ""
 let ScLink = "https://soundcloud.com/architech"
 let GhLink = "https://github.com/0101"
+
+let IdleSeconds = 2.0

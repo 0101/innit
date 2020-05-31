@@ -8,6 +8,7 @@
     <Compile Include="Mechanics.fs" />
     <Compile Include="Rendering.fs" />
     <Compile Include="Animations.fs" />
+    <Compile Include="Solver.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
   <ItemGroup>
