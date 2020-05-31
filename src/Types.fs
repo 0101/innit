@@ -1,6 +1,13 @@
 [<AutoOpen>]
 module Types
 
+
+open Elmish
+open Elmish.React
+open Fable.React
+open Fable.React.Props
+
+
 [<Measure>] type Sq
 [<Measure>] type Px
 
@@ -15,6 +22,7 @@ type Piece = {
     Type: PieceType
     Left: float<Sq>
     Top: float<Sq>
+    StartingPosition: Coords
 }
 
 type Field = Empty | Occupied of Piece
@@ -26,6 +34,13 @@ type Animation = {
     TargetTop: float<Sq>
 }
 
+type HiddenItem = {
+    Left: float<Sq>
+    Top: float<Sq>
+    Hue: int
+    Content: ReactElement
+}
+
 type State = {
     Rng: System.Random
     ScreenWidth: int
@@ -35,6 +50,7 @@ type State = {
     CurrentAnimations: Animation list
     AnimationQueue: Path list
     Timer: float option
+    Items: HiddenItem list
 }
 
 type Msg =

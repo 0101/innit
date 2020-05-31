@@ -1,7 +1,11 @@
 module Rendering
 
+open System
 open Fable.React
 open Fable.React.Props
+
+
+open Mechanics
 
 
 let grid2px (grid: float<Sq>): int<Px> =
@@ -31,6 +35,7 @@ let RandomField (random : System.Random) x y = {
     Top  = float y * 1.0<Sq>
     Color = PieceColor random
     Type = Regular
+    StartingPosition = x * 1<Sq>, y * 1<Sq>
 }
 
 let TitleField (r: System.Random) x y char =
@@ -42,13 +47,21 @@ let RenderGrid (state : State) =
     state.Grid |> Seq.collect (Seq.map (function
         | Field.Empty -> div [ Class "empty" ] []
         | Occupied piece ->
-            div [ Class ("piece" + match piece.Type with PieceType.Title -> " title" | _ -> "")
+            let bg, shadow, z, cls =
+                match state.Items |> List.tryFind (fun i -> i.Left = piece.Left && i.Top = piece.Top ) with
+                | Some item ->
+                    let c = sprintf "hsl(%d, 80%%, 12%%)" item.Hue
+                    c, (sprintf "0px 0px 20px 8px %s" c), "9000", " highlighted"
+                | None -> piece.Color, "none", "auto", ""
+            div [ Class ("piece" + cls + match piece.Type with PieceType.Title -> " title" | _ -> "")
                   Style [
                     Top (grid2px piece.Top + shiftY)
                     Left (grid2px piece.Left + shiftX)
                     Width SquareSize
                     Height SquareSize
-                    BackgroundColor piece.Color
+                    BackgroundColor bg
+                    BoxShadow shadow
+                    ZIndex z
                   ]
                 ]
                 [ div [ Class "inner" ]
@@ -57,3 +70,42 @@ let RenderGrid (state : State) =
                       ] ]
         ))
         |> Seq.toList
+
+
+let RandomLocations (random : Random) (gridW, gridH) =
+    let rec getLocationsFrom available = seq {
+        if not (Set.isEmpty available) then
+            let loc = available |> Set.toSeq |> Seq.sortBy (fun _ -> random.Next()) |> Seq.head
+            let surroundings = Surroundings loc |> Set
+            yield loc
+            yield! getLocationsFrom (Set.difference available surroundings)
+    }
+    getLocationsFrom (set [ for x in [1..gridW - 2] do
+                            for y in [1..gridH - 2] do x, y ])
+
+
+let RandomItems random dimensions (items : (int * ReactElement) list) =
+    let locations = RandomLocations random dimensions |> Seq.take items.Length |> Seq.toList
+
+    List.zip locations items
+    |> List.map (fun (location, (hue, item)) -> {
+            Left = fst location |> float |> (*) 1.0<Sq>
+            Top =  snd location |> float |> (*) 1.0<Sq>
+            Content = item
+            Hue = hue
+    })
+
+
+let RenderItems state =
+    let shiftX, shiftY = CenterShift state
+    state.Items
+    |> Seq.map (fun item ->
+        div [ Class "item"
+              Style [
+                    Top (grid2px item.Top + shiftY)
+                    Left (grid2px item.Left + shiftX)
+                    Width SquareSize
+                    Height SquareSize
+                    Color (sprintf "hsl(%d, 80%%, 40%%)" item.Hue)
+              ] ]
+            [ item.Content ] )

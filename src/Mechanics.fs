@@ -2,27 +2,9 @@ module Mechanics
 
 open System
 
-let rec GetShortestPaths ((ax, ay) : Coords) ((bx, by) : Coords) =
-    let xDiff = bx - ax
-    let yDiff = by - ay
-    let xDistance = abs xDiff
-    let xDirection = if xDistance <> 0<Sq> then xDiff / xDistance else 0
-    let yDistance = abs yDiff
-    let yDirection = if yDistance <> 0<Sq> then yDiff / yDistance else 0
-
-    match int xDiff, int yDiff with
-    | 0, 0 -> Seq.empty
-    | 0, _ -> Seq.singleton [for d in [1..int(yDistance)] -> ( ax, ay + yDirection * d * 1<Sq>) ]
-    | _, 0 -> Seq.singleton [for d in [1..int(xDistance)] -> ( ax + xDirection * d * 1<Sq>, ay) ]
-    | _ -> seq {
-        let moveX = ax + 1<Sq> * xDirection, ay
-        for p in GetShortestPaths moveX (bx, by) -> moveX::p
-
-        let moveY = ax, ay + 1<Sq> * yDirection
-        for p in GetShortestPaths moveY (bx, by) -> moveY::p
-    }
 
 let GetRandomPath random (from : Coords) (to' : Coords) : Path =
+    if from = to' then [] else
 
     let rec loop (random : Random) path (ax, ay) (bx, by) =
 
@@ -63,3 +45,10 @@ let SegmentPath (path: Path) : Path list =
             then loop result (x3::currentChunk) rest
             else loop ((List.rev currentChunk)::result) [x2] restOfPath
     loop [] [] path |> List.rev
+
+
+let Surroundings (x, y) = set [
+    x - 1, y - 1; x, y - 1; x + 1, y - 1
+    x - 1, y    ; x, y    ; x + 1, y
+    x - 1, y + 1; x, y + 1; x + 1, y + 1
+]

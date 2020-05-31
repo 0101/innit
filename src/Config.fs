@@ -15,4 +15,8 @@ let BasicCharProbability = 0.8
 
 let PieceColor (random : Random) = sprintf "hsl(0, 0%%, %f%%)" (random.NextDouble() * 4.0 + 2.0)
 
-let InitialEmptyField = 3, 2
+let InitialEmptyField = 0, 0
+
+let ContactEmail = "nbjmup;nbjmAjooju/d{" |> Seq.map (int >> ((+) -1) >> char >> string ) |> String.concat ""
+let ScLink = "https://soundcloud.com/architech"
+let GhLink = "https://github.com/0101"

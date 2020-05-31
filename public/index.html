@@ -6,22 +6,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="shortcut icon" href="i.png" />
   <style>
-    body {padding: 0; margin: 0;overflow: hidden; font-family: sans-serif; }
-    .Screen {
-      background-color: #000; padding: 0; margin: 0; margin-bottom: 0px;
-      position: absolute; top:0px;bottom: 0px; width: 100%;
-      color: #202020; }
+    @font-face {
+        font-family: 'droid_sansregular';
+        src: url('DroidSans-webfont.eot');
+        src: url('DroidSans-webfont.eot?#iefix') format('embedded-opentype'),
+            url('DroidSans-webfont.woff2') format('woff2'),
+            url('DroidSans-webfont.woff') format('woff'),
+            url('DroidSans-webfont.ttf') format('truetype'),
+            url('DroidSans-webfont.svg#droid_sansregular') format('svg');
+        font-weight: normal;
+        font-style: normal;
+
+    }
+    body {padding: 0; margin: 0; overflow: hidden;  background-color: #000; color: #202020;
+      font-family: 'droid_sansregular';
+    }
+
     .Content {color:#fff; position: relative; top: 40%; text-align: center; }
-    .piece {position: absolute; text-align: center;}
+    .piece, .item {position: absolute; text-align: center; cursor: default;}
+
+    .highlighted.piece {color:#111;}
     .title.piece {color:#fff; text-shadow: 0px 0px 5px #aaa;}
     .piece .inner {border: 0px solid #222; position: absolute; left: 5px; top:5px; bottom: 5px; right: 5px; display: inline-block; }
     .piece .symbol {padding-top: 25%; margin: 0; font-size: 30px; line-height: 1.6;}
     .piece .info {margin: 0; padding: 0; color: #000; }
     .title.piece .info { display: none; }
+    .item a { display: inline-block; font-size: 50px; text-decoration: none; color: inherit; text-align: center; width: 100%; height: 100%; text-shadow: 0px 0px 10px; line-height: 1.8;}
+    .item a {background-position: center; background-size: 70%; background-repeat: no-repeat; }
+    .item .mail {background-image: url("mail.png"); }
+    .item .sc {background-image: url("sc.png"); }
+    .item .gh {background-image: url("gh.png"); }
+    .noscript { color: hsl(0, 80%, 20%); font-size: 50px; text-align: center; padding: 50px;}
   </style>
 </head>
 <body>
-  <div id="elmish-app" class="elmish-app"></div>
+  <div id="elmish-app" class="elmish-app">
+    <div class=noscript>
+      <noscript>No script no fun</noscript>
+    </div>
+  </div>
   <script src="bundle.js"></script>
 </body>
 </html>

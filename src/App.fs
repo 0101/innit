@@ -46,10 +46,42 @@ let init () =
         CurrentAnimations = []
         AnimationQueue = []
         Timer = None
+        Items = RandomItems random (gridW, gridH) [
+            000, a [ Href ContactEmail; Class "mail" ] [ ]
+            024, a [ Href ScLink; Target "_blank"; Class "sc" ] [ ]
+            192, a [ Href GhLink; Target "_blank"; Class "gh" ] [ ]
+        ]
     }, Cmd.none
 
 
 let update (msg : Msg) (state : State) =
+    let state =
+        match msg with
+
+        | CursorMove (x, y) ->
+            let shiftX, shiftY = CenterShift state
+            let coords = int (px2grid (x - shiftX)) * 1<Sq>, int (px2grid (y - shiftY)) * 1<Sq>
+            let path = GetRandomPath state.Rng state.EmptyField coords
+            let segments = SegmentPath path
+            { state with AnimationQueue = segments }
+
+        | PageResize (x, y) -> { fst (init()) with ScreenWidth = x; ScreenHeight = y }
+
+        | Tick ->
+            let currentAnimations = state.CurrentAnimations |> List.choose (AdvanceAnimation state)
+            let currentAnimations, animationQueue, newEmptyField =
+                match currentAnimations, state.AnimationQueue with
+                | [], x::rest -> Animate state x, rest, List.last x
+                | c, q -> c, q, state.EmptyField
+            { state with CurrentAnimations = currentAnimations
+                         AnimationQueue = animationQueue
+                         EmptyField = newEmptyField }
+
+        | StartedTimer t -> { state with Timer = Some t }
+
+        | StopTimer t ->
+            Browser.Dom.window.clearInterval t
+            { state with Timer = None }
 
     let cmd =
         match state.Timer, state.CurrentAnimations, state.AnimationQueue with
@@ -60,40 +92,21 @@ let update (msg : Msg) (state : State) =
         | Some t, [], [] -> Cmd.ofMsg (StopTimer t)
         | _ -> Cmd.none
 
-    match msg with
-
-    | CursorMove (x, y) ->
-        let shiftX, shiftY = CenterShift state
-        let coords = int (px2grid (x - shiftX)) * 1<Sq>, int (px2grid (y - shiftY)) * 1<Sq>
-        if coords <> state.EmptyField then
-            let path = GetRandomPath state.Rng state.EmptyField coords
-            let segments = SegmentPath path
-            { state with AnimationQueue = segments }, cmd
-        else state, cmd
-
-    | PageResize (x, y) -> { fst (init()) with ScreenWidth = x; ScreenHeight = y }, cmd
-
-    | Tick ->
-        let currentAnimations = state.CurrentAnimations |> List.choose (AdvanceAnimation state)
-        let currentAnimations, animationQueue, newEmptyField =
-            match currentAnimations, state.AnimationQueue with
-            | [], x::rest -> Animate state x, rest, List.last x
-            | c, q -> c, q, state.EmptyField
-        { state with CurrentAnimations = currentAnimations
-                     AnimationQueue = animationQueue
-                     EmptyField = newEmptyField }, cmd
-
-    | StartedTimer t -> { state with Timer = Some t }, Cmd.none
-
-    | StopTimer t ->
-        Browser.Dom.window.clearInterval t
-        { state with Timer = None }, cmd
+    state, cmd
 
 
 let view (state : State) dispatch =
-    div [ OnMouseMove (fun x -> CursorMove (int x.pageX * 1<Px>, int x.pageY * 1<Px>) |> dispatch )
-          Class "Screen" ]
-        (RenderGrid state)
+    let move (e: Browser.Types.MouseEvent) = CursorMove (int e.pageX * 1<Px>, int e.pageY * 1<Px>) |> dispatch
+
+    div [] [
+        div [] (RenderItems state)
+        div [
+                OnMouseMove move
+                OnClick move
+                Class "Screen"
+            ]
+            (RenderGrid state)
+    ]
 
 
 let resize _ =
