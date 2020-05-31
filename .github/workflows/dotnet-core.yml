@@ -21,5 +21,7 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore src
+    - name: Build
+      run: dotnet build --configuration Release --no-restore test
     - name: Test
       run: dotnet test --no-restore --verbosity normal test
