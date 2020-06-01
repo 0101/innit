@@ -35,11 +35,15 @@ let RandomField (random : System.Random) x y = {
     Top  = float y * 1.0<Sq>
     Color = PieceColor random
     Type = Regular
-    StartingPosition = x * 1<Sq>, y * 1<Sq>
+    TargetPositions = []
 }
 
-let TitleField (r: System.Random) x y char =
-  { RandomField r x y with Content = char; Type = PieceType.Title }
+let TitleField (r: System.Random) x y targets char =
+  { RandomField r x y with
+        Content = char
+        Type = PieceType.Title
+        TargetPositions = [ for (x, y) in targets -> x * 1<Sq>, y * 1<Sq> ]
+        }
 
 
 let RenderGrid (state : State) =
@@ -72,20 +76,8 @@ let RenderGrid (state : State) =
         |> Seq.toList
 
 
-let RandomLocations (random : Random) (gridW, gridH) =
-    let rec getLocationsFrom available = seq {
-        if not (Set.isEmpty available) then
-            let loc = available |> Set.toSeq |> Seq.sortBy (fun _ -> random.Next()) |> Seq.head
-            let surroundings = Surroundings loc |> Set
-            yield loc
-            yield! getLocationsFrom (Set.difference available surroundings)
-    }
-    getLocationsFrom (set [ for x in [1..gridW - 2] do
-                            for y in [1..gridH - 2] do x, y ])
-
-
 let RandomItems random dimensions (items : (int * ReactElement) list) =
-    let locations = RandomLocations random dimensions |> Seq.take items.Length |> Seq.toList
+    let locations = RandomItemLocations random dimensions |> Seq.take items.Length |> Seq.toList
 
     List.zip locations items
     |> List.map (fun (location, (hue, item)) -> {

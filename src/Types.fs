@@ -18,7 +18,7 @@ type Piece = {
     Type: PieceType
     Left: float<Sq>
     Top: float<Sq>
-    StartingPosition: Coords
+    TargetPositions: List<Coords>
 }
 
 type Field = Empty | Occupied of Piece

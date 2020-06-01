@@ -22,6 +22,7 @@ let Animate (state : State) (path : Path) : Animation list =
 
 let fRound (x: float<Sq>) = (round (10.0 * float x) / 10.0) * 1.0<Sq>
 
+
 let AdvanceAnimation (state : State) (animation : Animation) : Animation option =
     let xDiff = animation.TargetLeft - animation.Piece.Left
     let yDiff = animation.TargetTop - animation.Piece.Top

@@ -13,10 +13,8 @@ open Rendering
 open Animations
 
 
-let init () =
+let initialSetup (screenW, screenH) =
     let makeOdd x = if x % 2 = 0 then x + 1 else x
-    let screenW = int Browser.Dom.window.innerWidth
-    let screenH = int Browser.Dom.window.innerHeight
     let gridW = max 5 (makeOdd (screenW / SquareSize + 1))
     let gridH = max 3 (makeOdd (screenH / SquareSize + 1))
     let centerX = gridW / 2
@@ -25,11 +23,11 @@ let init () =
 
     let makeField x y =
         let t = TitleField random x y
-        if   y = centerY && x = centerX - 2 then t 'I'
-        elif y = centerY && x = centerX - 1 then t 'N'
-        elif y = centerY && x = centerX     then t 'N'
-        elif y = centerY && x = centerX + 1 then t 'I'
-        elif y = centerY && x = centerX + 2 then t 'T'
+        if   y = centerY && x = centerX - 2 then t [x,y] 'I'
+        elif y = centerY && x = centerX - 1 then t [x,y] 'N'
+        elif y = centerY && x = centerX     then t [x,y] 'N'
+        elif y = centerY && x = centerX + 1 then t [x,y] 'I'
+        elif y = centerY && x = centerX + 2 then t [x,y] 'T'
         else RandomField random x y
 
     {
@@ -53,6 +51,12 @@ let init () =
         ]
         LastUpdate = DateTime.Now
     }, Cmd.none
+
+
+let init () =
+    let screenW = int Browser.Dom.window.innerWidth
+    let screenH = int Browser.Dom.window.innerHeight
+    initialSetup (screenW, screenH)
 
 
 let update (msg : Msg) (state : State) =
@@ -137,5 +141,5 @@ Program.mkProgram init update view
 |> Program.withSubscription resize
 |> Program.withSubscription slowTimer
 |> Program.withReactSynchronous "elmish-app"
-|> Program.withConsoleTrace
+//|> Program.withConsoleTrace
 |> Program.run

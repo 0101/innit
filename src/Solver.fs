@@ -2,6 +2,7 @@ module Solver
 
 
 open Mechanics
+open System
 
 
 type Position = int * int
@@ -15,7 +16,7 @@ type GameState = {
     GridW: int
     GridH: int
     EmptySpace: Position
-    Pieces: GamePiece list
+    Pieces: Set<GamePiece>
 }
 
 
@@ -25,21 +26,19 @@ let CreateGameState (state : State) : GameState =
         GridW = state.Grid.Length
         GridH = state.Grid.[0].Length
         EmptySpace = int ex, int ey
-        Pieces = seq {
+        Pieces = set [
             for x, row in state.Grid |> Array.mapi (fun x r -> x, r) do
                 for y, field in row |> Array.mapi (fun y f -> y, f) do
                     match field with
-                    | Occupied piece when piece.Type = Title ->
-                        let tx, ty = piece.StartingPosition
-                        yield {
+                    | Occupied piece when piece.Type = Title -> {
                             Position = x, y
-                            Targets = set [ int tx, int ty ] // TODO Multiple targets
+                            Targets = set [ for (tx, ty) in piece.TargetPositions -> int tx, int ty ]
                         }
-                    | _ -> () } |> Seq.toList
+                    | _ -> () ]
     }
 
 
-let IsSolved state = state.Pieces |> Seq.forall (fun p -> p.Targets |> Set.contains p.Position)
+let IsSolved state = state.Pieces |> Set.forall (fun p -> p.Targets |> Set.contains p.Position)
 
 
 let GetValidMoves state = seq {
@@ -51,10 +50,10 @@ let GetValidMoves state = seq {
 }
 
 
-let ApplyMove state move =
-    let pieceMoved, piecesStaying = state.Pieces |> List.partition (fun p -> p.Position = move)
+let ApplyMove move state =
+    let pieceMoved, piecesStaying = state.Pieces |> Set.partition (fun p -> p.Position = move)
     { state with EmptySpace = move
-                 Pieces = [
+                 Pieces = set [
                     for p in pieceMoved do { p with Position = state.EmptySpace }
                     yield! piecesStaying
                  ] }
@@ -69,33 +68,49 @@ let DistanceToTarget piece =
 
 let DistanceToEmpty state =
     state.Pieces
-    |> List.sumBy (fun p -> p.Position |> Distance state.EmptySpace)
+    |> Seq.filter (fun p -> p.Targets |> Set.contains p.Position |> not)
+    |> Seq.sumBy (fun p -> p.Position |> Distance state.EmptySpace)
+    //|> (fun d -> 1.1 ** float d)
+    //|> int
+    |> (fun d -> (d - 2) * 10 |> max 0)
 
 
 let Score state =
     state.Pieces
-    |> List.sumBy DistanceToTarget
-    |> (*) 1000
+    |> Seq.sumBy DistanceToTarget
+    |> (*) 100
     |> (+) (DistanceToEmpty state)
+    //|> (+) (Random().Next(0, 1000))
 
 
 let Solve (gameState : GameState) : Position list =
 
-    let rec solve queue seen =
+    let start = DateTime.Now
+
+    let rec solve queue seen (bestScore, best) =
         match queue with
         | [] -> []
         | (gs, moveHistory)::rest ->
+            if Set.contains gs seen then
+                solve rest seen (bestScore, best)
+            else
             let newSeen = Set.add gs seen
+            let score = Score gs
+            let bestScore, best = if score <= bestScore then score, (gs, moveHistory) else bestScore, best
+            if (DateTime.Now - start).TotalSeconds > 1.5 then
+                Browser.Dom.console.info "Failed to put the board in order!"
+                snd best |> List.rev
+            else
             if IsSolved gs then moveHistory |> List.rev
             else
                 let newMoves =
                     GetValidMoves gs
-                    |> Seq.map (fun move -> ApplyMove gs move, move::moveHistory )
-                    |> Seq.filter (fun (gs, _) -> Set.contains gs seen |> not)
+                    |> Seq.map (fun move -> ApplyMove move gs, move::moveHistory)
+                    |> Seq.filter (fun (gs', _) -> Set.contains gs' seen |> not)
                 let newQueue = Seq.append newMoves rest |> Seq.sortBy (fst >> Score) |> Seq.toList
-                solve newQueue newSeen
+                solve newQueue newSeen (bestScore, best)
 
-    solve [gameState, []] Set.empty
+    solve [gameState, []] Set.empty (Score gameState, (gameState, []))
     |> function
     | [] -> []
     | xs -> gameState.EmptySpace::xs
@@ -107,4 +122,9 @@ let SolveState (state : State) : Path list =
     |> CreateGameState
     |> Solve
     |> List.map (fun (x, y) -> x * 1<Sq>, y * 1<Sq>)
-    |> SegmentPath
+    |> (fun p ->
+        try
+            SegmentPath p
+        with ex ->
+            Browser.Dom.console.error(sprintf "Failed path: %A" p)
+            [])

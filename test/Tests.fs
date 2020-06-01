@@ -7,11 +7,6 @@ open FsCheck
 open FsCheck.Xunit
 
 open Mechanics
-open Rendering
-
-[<Fact>]
-let ``My test`` () =
-    Assert.True(true)
 
 
 [<Property>]
@@ -66,14 +61,14 @@ let ``Segmented path can be put together again`` (from: Coords) (to': Coords) =
 
 
 [<Property>]
-let ``Random locations don't overlap`` gridDimensions =
-    let locs = RandomLocations (Random()) gridDimensions |> Seq.toList
+let ``Random item locations don't overlap`` gridDimensions =
+    let locs = RandomItemLocations (Random()) gridDimensions |> Seq.toList
     Assert.Equal (locs.Length, locs |> List.distinct |> List.length)
 
 
 [<Property>]
-let ``Random are not next to each other`` gridDimensions =
-    let locs = RandomLocations (Random()) gridDimensions |> Seq.toList
+let ``Random item locations are not next to each other`` gridDimensions =
+    let locs = RandomItemLocations (Random()) gridDimensions |> Seq.toList
     for l1 in locs do
     for l2 in locs do
     if l1 <> l2 then
