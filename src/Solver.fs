@@ -5,26 +5,15 @@ open Mechanics
 open System
 
 
-type Position = int * int
 
-type GamePiece = {
-    Position: Position
-    Targets: Set<Position>
-}
-
-type GameState = {
-    GridW: int
-    GridH: int
-    EmptySpace: Position
-    Pieces: Set<GamePiece>
-}
 
 
 let CreateGameState (state : State) : GameState =
     let ex, ey = state.EmptyField
     {
-        GridW = state.Grid.Length
-        GridH = state.Grid.[0].Length
+        //TODO: refactor to use getPieces
+        GridW = GridWidth state.Grid
+        GridH = GridHeight state.Grid
         EmptySpace = int ex, int ey
         Pieces = set [
             for x, row in state.Grid |> Array.mapi (fun x r -> x, r) do
@@ -83,48 +72,56 @@ let Score state =
     //|> (+) (Random().Next(0, 1000))
 
 
-let Solve (gameState : GameState) : Position list =
+let Solve (gameState : GameState) : Async<SolutionType * Position list> = async {
+    Browser.Dom.console.info "Start Solve"
 
     let start = DateTime.Now
 
-    let rec solve queue seen (bestScore, best) =
+    let rec solve iteration queue seen (bestScore, best) = async {
+        if iteration % 100 = 0 then do! Async.Sleep 0 // TODO: test sleep 0
         match queue with
-        | [] -> []
+        | [] -> return Complete, []
         | (gs, moveHistory)::rest ->
             if Set.contains gs seen then
-                solve rest seen (bestScore, best)
+                return! solve (iteration + 1) rest seen (bestScore, best)
             else
             let newSeen = Set.add gs seen
             let score = Score gs
             let bestScore, best = if score <= bestScore then score, (gs, moveHistory) else bestScore, best
             if (DateTime.Now - start).TotalSeconds > 1.5 then
                 Browser.Dom.console.info "Failed to put the board in order!"
-                snd best |> List.rev
+                let partialState, partialSolution = best
+                return Partial partialState, partialSolution |> List.rev
             else
-            if IsSolved gs then moveHistory |> List.rev
+            if IsSolved gs then return Complete, moveHistory |> List.rev
             else
                 let newMoves =
                     GetValidMoves gs
                     |> Seq.map (fun move -> ApplyMove move gs, move::moveHistory)
                     |> Seq.filter (fun (gs', _) -> Set.contains gs' seen |> not)
                 let newQueue = Seq.append newMoves rest |> Seq.sortBy (fst >> Score) |> Seq.toList
-                solve newQueue newSeen (bestScore, best)
+                return! solve (iteration + 1) newQueue newSeen (bestScore, best)
+    }
 
-    solve [gameState, []] Set.empty (Score gameState, (gameState, []))
-    |> function
-    | [] -> []
-    | xs -> gameState.EmptySpace::xs
+    let! solution = solve 0 [gameState, []] Set.empty (Score gameState, (gameState, []))
+    return solution |> mapSnd (function
+                               | [] -> []
+                               | xs -> gameState.EmptySpace::xs)
+}
 
-
-
-let SolveState (state : State) : Path list =
-    state
-    |> CreateGameState
-    |> Solve
-    |> List.map (fun (x, y) -> x * 1<Sq>, y * 1<Sq>)
-    |> (fun p ->
+let SolutionToPaths =
+    List.map (fun (x, y) -> x * 1<Sq>, y * 1<Sq>)
+        >> (fun p ->
         try
+            // TODO: this should be cleaned up
             SegmentPath p
         with ex ->
             Browser.Dom.console.error(sprintf "Failed path: %A" p)
             [])
+
+let SolveState (state : State) : Async<SolutionType * Path list> = async {
+    let! solution = state |> CreateGameState |> Solve
+    return solution |> mapSnd SolutionToPaths
+}
+
+

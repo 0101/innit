@@ -30,11 +30,56 @@ type Animation = {
     TargetTop: float<Sq>
 }
 
-type HiddenItem = {
-    Left: float<Sq>
-    Top: float<Sq>
+// Solver types /////
+
+type Position = int * int
+
+
+type GamePiece = {
+    Position: Position
+    Targets: Set<Position>
+}
+
+type GameState = {
+    GridW: int
+    GridH: int
+    EmptySpace: Position
+    Pieces: Set<GamePiece>
+}
+
+
+type SolutionType = Complete | Partial of GameState
+
+//////////////////////
+
+
+type Msg =
+    | CursorMove of int<Px> * int<Px>
+    | PageResize of int * int
+    | StartTimer
+    | StartedTimer of float
+    | StopTimer of float
+    | Tick
+    | IdleCheck
+    | Idle
+    | Solution of SolutionType * Path list
+    | Shuffle
+
+
+type ItemContent = Link of string | Control of Msg
+
+type HiddenItemSpec = {
+    Class: string
     Hue: int
-    Content: ReactElement
+    Content: ItemContent
+}
+
+type HiddenItem = {
+    Class: string
+    Hue: int
+    Content: ItemContent
+    Top: float<Sq>
+    Left: float<Sq>
 }
 
 type State = {
@@ -48,12 +93,8 @@ type State = {
     AnimationTimer: float option
     Items: HiddenItem list
     LastUpdate: DateTime
+    IdleCheckInProgress: bool
+    Idle: bool
 }
 
-type Msg =
-| CursorMove of int<Px> * int<Px>
-| PageResize of int * int
-| StartedTimer of float
-| StopTimer of float
-| Tick
-| Tock
+

@@ -45,11 +45,14 @@ let initialSetup (screenW, screenH) =
         AnimationQueue = []
         AnimationTimer = None
         Items = RandomItems random (gridW, gridH) [
-            000, a [ Href ContactEmail; Class "mail" ] [ ]
-            024, a [ Href ScLink; Target "_blank"; Class "sc" ] [ ]
-            192, a [ Href GhLink; Target "_blank"; Class "gh" ] [ ]
+            { Hue = 000; Class = "mail"; Content = Link ContactEmail }
+            { Hue = 024; Class = "sc"; Content = Link ScLink }
+            { Hue = 192; Class = "gh"; Content = Link GhLink }
+            { Hue = 097; Class = "shuffle"; Content = Control Shuffle }
         ]
         LastUpdate = DateTime.Now
+        IdleCheckInProgress = false
+        Idle = false
     }, Cmd.none
 
 
@@ -59,63 +62,98 @@ let init () =
     initialSetup (screenW, screenH)
 
 
+
+
 let update (msg : Msg) (state : State) =
+    match msg with
 
-    let state = if msg = Tock then state else { state with LastUpdate = DateTime.Now }
+    | CursorMove (x, y) ->
+        let shiftX, shiftY = CenterShift state
+        let coords = int (px2grid (x - shiftX)) * 1<Sq>, int (px2grid (y - shiftY)) * 1<Sq>
+        let path = GetRandomPath state.Rng state.EmptyField coords
+        let segments = SegmentPath path
+        { state with AnimationQueue = segments
+                     LastUpdate = DateTime.Now
+                     Idle = false },
+        Cmd.batch [
+            match state.AnimationTimer with None -> Cmd.ofMsg StartTimer | _ -> Cmd.none
+            if state.IdleCheckInProgress then Cmd.none else Cmd.ofMsg IdleCheck
+        ]
 
-    let state =
-        match msg with
+    | PageResize (x, y) ->
+        { fst (init()) with ScreenWidth = x; ScreenHeight = y },
+        match state.AnimationTimer with Some t -> Cmd.ofMsg (StopTimer t) | _ -> Cmd.none
 
-        | CursorMove (x, y) ->
-            let shiftX, shiftY = CenterShift state
-            let coords = int (px2grid (x - shiftX)) * 1<Sq>, int (px2grid (y - shiftY)) * 1<Sq>
-            let path = GetRandomPath state.Rng state.EmptyField coords
-            let segments = SegmentPath path
-            { state with AnimationQueue = segments }
+    | Tick ->
+        let currentAnimations = state.CurrentAnimations |> List.choose (AdvanceAnimation state)
+        let currentAnimations, animationQueue, newEmptyField =
+            match currentAnimations, state.AnimationQueue with
+            | [], x::rest -> Animate state x, rest, List.last x
+            | c, q -> c, q, state.EmptyField
+        let state =
+          { state with CurrentAnimations = currentAnimations
+                       AnimationQueue = animationQueue
+                       EmptyField = newEmptyField }
+        state,
+        match state.CurrentAnimations, state.AnimationTimer with
+        | [], Some t -> Cmd.ofMsg (StopTimer t)
+        | _::_, None -> Cmd.ofMsg (StartTimer)
+        | _          -> Cmd.none
 
-        | PageResize (x, y) -> { fst (init()) with ScreenWidth = x; ScreenHeight = y }
+    | StartTimer -> state, Cmd.ofSub (fun dispatch ->
+         let timer = Browser.Dom.window.setInterval((fun _ -> dispatch Tick), 1000 / 40)
+         dispatch (StartedTimer timer))
 
-        | Tick ->
-            let currentAnimations = state.CurrentAnimations |> List.choose (AdvanceAnimation state)
-            let currentAnimations, animationQueue, newEmptyField =
-                match currentAnimations, state.AnimationQueue with
-                | [], x::rest -> Animate state x, rest, List.last x
-                | c, q -> c, q, state.EmptyField
-            { state with CurrentAnimations = currentAnimations
-                         AnimationQueue = animationQueue
-                         EmptyField = newEmptyField }
+    | StartedTimer t -> { state with AnimationTimer = Some t }, Cmd.none
 
-        | StartedTimer t -> { state with AnimationTimer = Some t }
+    | StopTimer t ->
+        Browser.Dom.window.clearInterval t
+        { state with AnimationTimer = None }, Cmd.none
 
-        | StopTimer t ->
-            Browser.Dom.window.clearInterval t
-            { state with AnimationTimer = None }
+    | IdleCheck ->
+        { state with IdleCheckInProgress = true },
+        let secondsSinceUpdate = (DateTime.Now - state.LastUpdate).TotalSeconds
+        if secondsSinceUpdate >= IdleSeconds
+        then Cmd.ofMsg Idle
+        else Cmd.OfAsync.result (async {
+            do! Async.Sleep (int (1000.0 * (IdleSeconds - secondsSinceUpdate)))
+            return IdleCheck
+        })
 
-        | Tock ->
-            if (DateTime.Now - state.LastUpdate).TotalSeconds > IdleSeconds then
-                Browser.Dom.console.info(sprintf "Solution: %A" (Solver.SolveState state))
-                { state with AnimationQueue = Solver.SolveState state }
-            else state
+    | Idle ->
+        { state with IdleCheckInProgress = false; Idle = true },
+        Cmd.OfAsync.result (Solver.SolveState state |> Async.map Solution)
 
+    | Solution (solutionType, solution) ->
+        if state.Idle then
+            { state with AnimationQueue = state.AnimationQueue @ solution }, Cmd.batch [
+                Cmd.ofMsg StartTimer
+                match solutionType with
+                | Complete ->
+                    Browser.Dom.console.info "Received Complete solution"
+                    Cmd.none
+                | Partial gs ->
+                    Browser.Dom.console.info "Received Partial solution"
 
+                    Cmd.OfAsync.result (Solver.Solve gs |> Async.map (mapSnd Solver.SolutionToPaths >> Solution) )
+            ]
+        else
+            state, Cmd.none
 
-    let cmd =
-        match state.AnimationTimer, state.CurrentAnimations, state.AnimationQueue with
-        | None, [], [] -> Cmd.none
-        | None, _, _  -> Cmd.ofSub (fun dispatch ->
-            let timer = Browser.Dom.window.setInterval((fun _ -> dispatch Tick), 1000 / 40)
-            dispatch (StartedTimer timer))
-        | Some t, [], [] -> Cmd.ofMsg (StopTimer t)
-        | _ -> Cmd.none
-
-    state, cmd
+    | Shuffle ->
+        let grid = state.Grid
+        let pieces = GetPieces state.Grid
+        let locations = FullyRandomLocations state.Rng (GridWidth grid, GridHeight grid) |> Seq.take pieces.Count
+        Seq.zip pieces locations
+        |> Seq.iter (fun ((currentLoc, _), newLoc) -> Swap grid currentLoc newLoc)
+        state, Cmd.none
 
 
 let view (state : State) dispatch =
     let move (e: Browser.Types.MouseEvent) = CursorMove (int e.pageX * 1<Px>, int e.pageY * 1<Px>) |> dispatch
 
     div [] [
-        div [] (RenderItems state)
+        div [] (RenderItems state dispatch)
         div [
                 OnMouseMove move
                 OnClick move
@@ -132,14 +170,16 @@ let resize _ =
             PageResize dims |> dispatch))
 
 
-let slowTimer _ =
-    Cmd.ofSub (fun dispatch ->
-        Browser.Dom.window.setInterval((fun _ -> dispatch Tock), 3000) |> ignore)
+// let slowTimer _ =
+//     Cmd.ofSub (fun dispatch ->
+//         Browser.Dom.window.setInterval((fun _ -> dispatch Tock), 3000) |> ignore)
 
 
 Program.mkProgram init update view
 |> Program.withSubscription resize
-|> Program.withSubscription slowTimer
+//|> Program.withSubscription slowTimer
 |> Program.withReactSynchronous "elmish-app"
 //|> Program.withConsoleTrace
 |> Program.run
+
+

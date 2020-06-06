@@ -54,8 +54,8 @@ let RenderGrid (state : State) =
             let bg, shadow, z, cls =
                 match state.Items |> List.tryFind (fun i -> i.Left = piece.Left && i.Top = piece.Top ) with
                 | Some item ->
-                    let c = sprintf "hsl(%d, 80%%, 12%%)" item.Hue
-                    c, (sprintf "0px 0px 20px 8px %s" c), "9000", " highlighted"
+                    let c = sprintf "hsl(%d, 80%%, 15%%)" item.Hue
+                    c, (sprintf "0px 0px 17px 5px %s" c), "9000", " highlighted"
                 | None -> piece.Color, "none", "auto", ""
             div [ Class ("piece" + cls + match piece.Type with PieceType.Title -> " title" | _ -> "")
                   Style [
@@ -76,19 +76,20 @@ let RenderGrid (state : State) =
         |> Seq.toList
 
 
-let RandomItems random dimensions (items : (int * ReactElement) list) =
+let RandomItems random dimensions (items : HiddenItemSpec list) =
     let locations = RandomItemLocations random dimensions |> Seq.take items.Length |> Seq.toList
 
     List.zip locations items
-    |> List.map (fun (location, (hue, item)) -> {
-            Left = fst location |> float |> (*) 1.0<Sq>
-            Top =  snd location |> float |> (*) 1.0<Sq>
-            Content = item
-            Hue = hue
+    |> List.map (fun (location, item) -> {
+        Left = fst location |> float |> (*) 1.0<Sq>
+        Top =  snd location |> float |> (*) 1.0<Sq>
+        Content = item.Content
+        Hue = item.Hue
+        Class = item.Class
     })
 
 
-let RenderItems state =
+let RenderItems state dispatch =
     let shiftX, shiftY = CenterShift state
     state.Items
     |> Seq.map (fun item ->
@@ -100,4 +101,7 @@ let RenderItems state =
                     Height SquareSize
                     Color (sprintf "hsl(%d, 80%%, 40%%)" item.Hue)
               ] ]
-            [ item.Content ] )
+            [ match item.Content with
+              | Link href   -> a [ Class item.Class; Href href; Target "_blank";  ] [ ]
+              | Control msg -> a [ Class item.Class; Href ("#" + item.Class); OnClick (fun _ -> dispatch msg ) ] [ ]
+            ] )
