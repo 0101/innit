@@ -1,8 +1,10 @@
 [<AutoOpen>]
 module Types
 
-open Fable.React
+
+open Feliz.UseWorker
 open System
+
 
 [<Measure>] type Sq
 [<Measure>] type Px
@@ -18,7 +20,7 @@ type Piece = {
     Type: PieceType
     Left: float<Sq>
     Top: float<Sq>
-    TargetPositions: List<Coords>
+    TargetPosition: Coords
 }
 
 type Field = Empty | Occupied of Piece
@@ -33,11 +35,11 @@ type Animation = {
 // Solver types /////
 
 type Position = int * int
-
+type Solution = Position list
 
 type GamePiece = {
     Position: Position
-    Targets: Set<Position>
+    Target: Position
 }
 
 type GameState = {
@@ -62,8 +64,10 @@ type Msg =
     | Tick
     | IdleCheck
     | Idle
-    | Solution of SolutionType * Path list
+    | Solution of SolutionType * Solution
     | Shuffle
+    | SetWorker of Worker<GameState, SolutionType * Solution>
+    | ChangeWorkerState of WorkerStatus
 
 
 type ItemContent = Link of string | Control of Msg
@@ -82,8 +86,8 @@ type HiddenItem = {
     Left: float<Sq>
 }
 
-type State = {
-    Rng: System.Random
+type State =
+  { Rng: Random
     ScreenWidth: int
     ScreenHeight: int
     EmptyField: int<Sq> * int<Sq>
@@ -95,6 +99,10 @@ type State = {
     LastUpdate: DateTime
     IdleCheckInProgress: bool
     Idle: bool
-}
+    Worker: Worker<GameState, SolutionType * Solution> option
+  }
+    interface System.IDisposable with
+        member this.Dispose () =
+            this.Worker |> Option.iter (fun w -> w.Dispose())
 
 

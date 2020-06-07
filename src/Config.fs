@@ -13,7 +13,7 @@ let AllChars = _getChars [0..56000]
 
 let BasicCharProbability = 0.8
 
-let PieceColor (random : Random) = sprintf "hsl(0, 0%%, %f%%)" (random.NextDouble() * 5.0 + 2.0)
+let PieceColor (random : Random) = sprintf "hsl(0, 0%%, %f%%)" (random.NextDouble() * 4.0 + 3.0)
 
 let InitialEmptyField = 0, 0
 

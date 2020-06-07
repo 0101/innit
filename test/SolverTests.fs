@@ -6,7 +6,7 @@ open FsCheck
 open FsCheck.Xunit
 
 open Mechanics
-open Solver
+open Workers.Solver
 
 
 type IntBetween0and3 =
@@ -21,24 +21,26 @@ let ``Simple solver solution works`` () empty piece target =
         GridW = 4
         GridH = 4
         EmptySpace = empty
-        Pieces = set [{ Position = piece; Targets = set [ target ] }]
+        Pieces = set [{ Position = piece; Target = target }]
     }
 
-    let solution = Solve gs
+    let sType, solution = Solve gs
 
     let solvedGs = solution |> List.fold (fun gs move -> gs |> ApplyMove move) gs
 
+    Assert.Equal(Complete, sType)
     Assert.True (IsSolved solvedGs, sprintf "%A" solution)
 
 
 [<Property(Arbitrary = [| typeof<IntBetween0and3> |])>]
 let ``Solution to a solved state is empty`` gs =
-    let gs = { gs with Pieces = set [{ Position = (0, 0); Targets = set [ 0, 0 ] }] }
+    let gs = { gs with Pieces = set [{ Position = (0, 0); Target = 0, 0 }] }
 
     Assert.True (IsSolved gs)
 
-    let solution = Solve gs
+    let sType, solution = Solve gs
 
+    Assert.Equal(Complete, sType)
     Assert.Equal<Position list>([], solution)
 
 
@@ -51,9 +53,9 @@ let ``Solution doesn't contain any back&forth moves`` () =
         GridH = h
         EmptySpace = locations.[0]
         Pieces = set [
-            { Position = locations.[1]; Targets = set [ locations.[2] ]}
-            { Position = locations.[3]; Targets = set [ locations.[4] ]}
-            { Position = locations.[5]; Targets = set [ locations.[6] ]}
+            { Position = locations.[1]; Target = locations.[2] }
+            { Position = locations.[3]; Target = locations.[4] }
+            { Position = locations.[5]; Target = locations.[6] }
         ]
     }
 
@@ -63,12 +65,12 @@ let ``Solution doesn't contain any back&forth moves`` () =
         EmptySpace = (1, 1)
         Pieces = set
                 [{ Position = (1, 2)
-                   Targets = set [(3, 1)] }; { Position = (3, 2)
-                                               Targets = set [(2, 1)] };
+                   Target = (3, 1) }; { Position = (3, 2)
+                                        Target = (2, 1) };
                  { Position = (2, 3)
-                   Targets = set [(1, 3)] }] }
+                   Target = (1, 3) }] }
 
-    let solution = Solve gs
+    let _, solution = Solve gs
     let backAndForth = solution |> List.windowed 3 |> List.filter (fun w -> w <> List.distinct w)
     Assert.True (backAndForth.Length = 0, sprintf "%A /// %A /// %A" gs solution backAndForth)
 
@@ -83,9 +85,9 @@ let ``Moving back & forth doesn't change the state`` () =
         GridH = h
         EmptySpace = x, y
         Pieces = set [
-            { Position = locations.[1]; Targets = set [ locations.[2] ]}
-            { Position = locations.[3]; Targets = set [ locations.[4] ]}
-            { Position = locations.[5]; Targets = set [ locations.[6] ]}
+            { Position = locations.[1]; Target = locations.[2] }
+            { Position = locations.[3]; Target = locations.[4] }
+            { Position = locations.[5]; Target = locations.[6] }
         ]
     }
     let gs' =

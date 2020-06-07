@@ -1,9 +1,7 @@
 module Rendering
 
-open System
 open Fable.React
 open Fable.React.Props
-
 
 open Mechanics
 
@@ -35,14 +33,14 @@ let RandomField (random : System.Random) x y = {
     Top  = float y * 1.0<Sq>
     Color = PieceColor random
     Type = Regular
-    TargetPositions = []
+    TargetPosition = 0<Sq>, 0<Sq>
 }
 
-let TitleField (r: System.Random) x y targets char =
+let TitleField (r: System.Random) x y char =
   { RandomField r x y with
         Content = char
         Type = PieceType.Title
-        TargetPositions = [ for (x, y) in targets -> x * 1<Sq>, y * 1<Sq> ]
+        TargetPosition = ToCoords (x, y)
         }
 
 
@@ -103,5 +101,9 @@ let RenderItems state dispatch =
               ] ]
             [ match item.Content with
               | Link href   -> a [ Class item.Class; Href href; Target "_blank";  ] [ ]
-              | Control msg -> a [ Class item.Class; Href ("#" + item.Class); OnClick (fun _ -> dispatch msg ) ] [ ]
+              | Control msg -> a [ Class item.Class; Href ("#" + item.Class);
+                                   OnClick (fun e ->
+                                            e.preventDefault()
+                                            dispatch msg
+                                            ) ] [ ]
             ] )

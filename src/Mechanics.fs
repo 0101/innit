@@ -95,3 +95,6 @@ let Swap (grid: Field[][]) (x1, y1) (x2, y2) =
     let p2 = match grid.[x2].[y2] with Empty -> Empty | Occupied p -> Occupied { p with Left = float x1 * 1.0<Sq>; Top = float y1 * 1.0<Sq>  }
     grid.[x2].[y2] <- p1
     grid.[x1].[y1] <- p2
+
+
+let ToCoords (x, y) = x * 1<Sq>, y * 1<Sq>
