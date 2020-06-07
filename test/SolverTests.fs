@@ -9,9 +9,6 @@ open Mechanics
 open Workers.Solver
 
 
-
-
-
 [<Property(Arbitrary = [| typeof<IntBetween0and3> |])>]
 let ``Simple solver solution works`` () empty piece target =
     empty <> piece ==> lazy
@@ -47,7 +44,7 @@ let ``Solution to a solved state is empty`` gs =
 let ``Solution doesn't contain any back&forth moves`` () =
     let w, h = 5, 5
     let locations = FullyRandomLocations (Random()) (w, h) |> Seq.take 7 |> Seq.toArray
-    let gs' = {
+    let gs = {
         GridW = w
         GridH = h
         EmptySpace = locations.[0]
@@ -57,18 +54,6 @@ let ``Solution doesn't contain any back&forth moves`` () =
             { Position = locations.[5]; Target = locations.[6] }
         ]
     }
-
-    let gs = {
-        GridW = 5
-        GridH = 5
-        EmptySpace = (1, 1)
-        Pieces = set
-                [{ Position = (1, 2)
-                   Target = (3, 1) }; { Position = (3, 2)
-                                        Target = (2, 1) };
-                 { Position = (2, 3)
-                   Target = (1, 3) }] }
-
     let _, solution = Solve (gs, SolverInitialTimeout)
     let backAndForth = solution |> List.windowed 3 |> List.filter (fun w -> w <> List.distinct w)
     Assert.True (backAndForth.Length = 0, sprintf "%A /// %A /// %A" gs solution backAndForth)

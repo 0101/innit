@@ -1,6 +1,5 @@
 module Tests
 
-
 open System
 open Xunit
 open FsCheck
@@ -78,10 +77,6 @@ let ``Random item locations are not next to each other`` gridDimensions =
 
 [<Property(Arbitrary = [| typeof<IntBetween5and20> |])>]
 let ``Item generator can place 4 items`` grid =
-    let item = {
-        Hue = 0
-        Class = "foo"
-        Content = Link "foo"
-    }
+    let item = { Hue = 0; Class = "foo"; Content = Link "foo" }
     let result = Rendering.RandomItems (Random()) grid [ item; item; item; item ]
     ()

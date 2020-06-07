@@ -10,7 +10,6 @@ open Init
 open Update
 
 
-
 let view (state : State) dispatch =
     let move (e: Browser.Types.MouseEvent) = CursorMove (int e.pageX * 1<Px>, int e.pageY * 1<Px>) |> dispatch
 

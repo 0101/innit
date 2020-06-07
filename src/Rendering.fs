@@ -110,6 +110,5 @@ let RenderItems state dispatch =
               | Control msg -> a [ Class item.Class; Href ("#" + item.Class);
                                    OnClick (fun e ->
                                             e.preventDefault()
-                                            dispatch msg
-                                            ) ] [ ]
+                                            dispatch msg) ] [ ]
             ] )

@@ -84,10 +84,10 @@ let FullyRandomLocations (random : Random) (gridW, gridH) =
 
 let GetPieces grid =
      set [ for x, row in grid |> Array.mapi (fun x r -> x, r) do
-               for y, field in row |> Array.mapi (fun y f -> y, f) do
-                   match field with
-                   | Occupied piece when piece.Type = Title -> (x, y), piece
-                   | _ -> () ]
+           for y, field in row |> Array.mapi (fun y f -> y, f) do
+           match field with
+           | Occupied piece when piece.Type = Title -> (x, y), piece
+           | _ -> () ]
 
 
 let GridWidth grid = Array.length grid
@@ -96,8 +96,12 @@ let GridHeight (grid: 'a[][]) = grid.[0].Length
 
 
 let Swap (grid: Field[][]) (x1, y1) (x2, y2) =
-    let p1 = match grid.[x1].[y1] with Empty -> Empty | Occupied p -> Occupied { p with Left = float x2 * 1.0<Sq>; Top = float y2 * 1.0<Sq>  }
-    let p2 = match grid.[x2].[y2] with Empty -> Empty | Occupied p -> Occupied { p with Left = float x1 * 1.0<Sq>; Top = float y1 * 1.0<Sq>  }
+    let p1 = match grid.[x1].[y1] with
+             | Empty -> Empty
+             | Occupied p -> Occupied { p with Left = float x2 * 1.0<Sq>; Top = float y2 * 1.0<Sq>  }
+    let p2 = match grid.[x2].[y2] with
+             | Empty -> Empty
+             | Occupied p -> Occupied { p with Left = float x1 * 1.0<Sq>; Top = float y1 * 1.0<Sq>  }
     grid.[x2].[y2] <- p1
     grid.[x1].[y1] <- p2
 

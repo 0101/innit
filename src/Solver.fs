@@ -1,30 +1,20 @@
 module Workers.Solver
 
-
 open Mechanics
 open System
-
 
 open Feliz.UseWorker
 
 
 let CreateGameState (state : State) : GameState =
     let ex, ey = state.EmptyField
-    {
-        //TODO: refactor to use getPieces
-        GridW = GridWidth state.Grid
-        GridH = GridHeight state.Grid
-        EmptySpace = int ex, int ey
-        Pieces = set [
-            for x, row in state.Grid |> Array.mapi (fun x r -> x, r) do
-                for y, field in row |> Array.mapi (fun y f -> y, f) do
-                    match field with
-                    | Occupied piece when piece.Type = Title -> {
-                            Position = x, y
-                            Target = piece.TargetPosition |> fst |> int, piece.TargetPosition |> snd |> int
-                        }
-                    | _ -> () ]
-    }
+    { GridW = GridWidth state.Grid
+      GridH = GridHeight state.Grid
+      EmptySpace = int ex, int ey
+      Pieces = GetPieces state.Grid |> Set.map (fun (position, piece) -> {
+          Position = position
+          Target = piece.TargetPosition |> fst |> int, piece.TargetPosition |> snd |> int
+      }) }
 
 
 let IsSolved state = state.Pieces |> Set.forall (fun p -> p.Target = p.Position)
@@ -32,12 +22,11 @@ let IsSolved state = state.Pieces |> Set.forall (fun p -> p.Target = p.Position)
 
 let GetValidMoves state = seq {
     let ex, ey = state.EmptySpace
-    if ex > 0 then yield ex - 1, ey
-    if ey > 0 then yield ex, ey - 1
-    if ex < state.GridW - 1 then yield ex + 1, ey
-    if ey < state.GridH - 1 then yield ex, ey + 1
+    if ex > 0 then ex - 1, ey
+    if ey > 0 then ex, ey - 1
+    if ex < state.GridW - 1 then ex + 1, ey
+    if ey < state.GridH - 1 then ex, ey + 1
 }
-
 
 let ApplyMove move state =
     let pieceMoved, piecesStaying = state.Pieces |> Set.partition (fun p -> p.Position = move)
@@ -51,17 +40,14 @@ let ApplyMove move state =
 let Distance (x1, y1) (x2, y2) = abs (x1 - x2) + abs (y1 - y2)
 
 
-let DistanceToTarget piece =
-    Distance piece.Position piece.Target
+let DistanceToTarget piece = Distance piece.Position piece.Target
 
 
 let DistanceToEmpty state =
     state.Pieces
     |> Seq.filter (fun p -> p.Target <> p.Position)
     |> Seq.sumBy (fun p -> p.Position |> Distance state.EmptySpace)
-    //|> (fun d -> 1.1 ** float d)
-    //|> int
-    |> (fun d -> (d - 2) * 10 |> max 0)
+    |> fun d -> (d - 2) * 10 |> max 0
 
 
 let Score state =
@@ -69,7 +55,6 @@ let Score state =
     |> Seq.sumBy DistanceToTarget
     |> (*) 100
     |> (+) (DistanceToEmpty state)
-    //|> (+) (Random().Next(0, 1000))
 
 
 let Solve (gameState: GameState, timeout: float) : SolutionType * Position list =
@@ -99,11 +84,10 @@ let Solve (gameState: GameState, timeout: float) : SolutionType * Position list 
                 let newQueue = Seq.append newMoves rest |> Seq.sortBy (fst >> Score) |> Seq.toList
                 solve newQueue newSeen (bestScore, best)
 
-
     let solution = solve [gameState, []] Set.empty (Score gameState, (gameState, []))
     solution |> mapSnd (function
-                       | [] -> []
-                       | xs -> gameState.EmptySpace::xs)
+                        | [] -> []
+                        | xs -> gameState.EmptySpace::xs)
 
 
 let SolutionToPaths s = s |> List.map ToCoords |> SegmentPath
