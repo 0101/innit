@@ -75,8 +75,11 @@ let RenderGrid (state : State) =
 
 
 let RandomItems random (x, y) (items : HiddenItemSpec list) =
-    let locationGenerator = if x * y < 36 then FullyRandomLocations else RandomItemLocations
-    let locations = locationGenerator random (x, y) |> Seq.take items.Length |> Seq.toList
+    let surroundings =
+        if   x * y < 20 then id >> Set.singleton
+        elif x * y < 36 then xySurroundings
+                        else FullSurroundings
+    let locations = RandomItemLocations random surroundings (x, y) |> Seq.take items.Length |> Seq.toList
 
     List.zip locations items
     |> List.map (fun (location, item) -> {
@@ -101,7 +104,8 @@ let RenderItems state dispatch =
                     Color (sprintf "hsl(%d, 80%%, 40%%)" item.Hue)
               ] ]
             [ match item.Content with
-              | Link href   -> a [ Class item.Class; Href href; Target "_blank";  ] [ ]
+              | Link href   -> a [ Class item.Class; Href href ] [ ]
+              | LinkNew href   -> a [ Class item.Class; Href href; Target "_blank";  ] [ ]
               | Control msg -> a [ Class item.Class; Href ("#" + item.Class);
                                    OnClick (fun e ->
                                             e.preventDefault()

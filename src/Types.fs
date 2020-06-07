@@ -70,7 +70,7 @@ type Msg =
     | ChangeWorkerState of WorkerStatus
 
 
-type ItemContent = Link of string | Control of Msg
+type ItemContent = Link of string | LinkNew of string | Control of Msg
 
 type HiddenItemSpec = {
     Class: string

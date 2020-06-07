@@ -5,6 +5,7 @@
   <ItemGroup>
     <Compile Include="Types.fs" />
     <Compile Include="Utils.fs" />
+    <Compile Include="Console.fs" />
     <Compile Include="Config.fs" />
     <Compile Include="Mechanics.fs" />
     <Compile Include="Rendering.fs" />

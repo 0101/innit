@@ -47,20 +47,25 @@ let SegmentPath path =
     loop [] [] path |> List.rev
 
 
-let Surroundings (x, y) = set [
+let FullSurroundings (x, y) = set [
     x - 1, y - 1; x, y - 1; x + 1, y - 1
     x - 1, y    ; x, y    ; x + 1, y
     x - 1, y + 1; x, y + 1; x + 1, y + 1
 ]
 
+let xySurroundings (x, y) = set [
+    x, y - 1
+    x - 1, y    ; x, y    ; x + 1, y
+    x, y + 1
+]
 
-let RandomItemLocations (random : Random) (gridW, gridH) =
+let RandomItemLocations (random : Random) surroundings (gridW, gridH) =
     let rec getLocationsFrom available = seq {
         if not (Set.isEmpty available) then
             let loc = available |> Set.toSeq |> Seq.sortBy (fun _ -> random.Next()) |> Seq.head
-            let surroundings = Surroundings loc |> Set
+            let removeLocations = surroundings loc |> Set
             yield loc
-            yield! getLocationsFrom (Set.difference available surroundings)
+            yield! getLocationsFrom (Set.difference available removeLocations)
     }
     getLocationsFrom (set [ for x in [1..gridW - 2] do
                             for y in [1..gridH - 2] do x, y ])

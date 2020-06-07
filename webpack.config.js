@@ -4,9 +4,12 @@
 
 var path = require("path");
 
+var isProduction = !hasArg(/webpack-dev-server/);
+
 module.exports = [
     {
-        mode: "development",
+        mode: isProduction ? 'production' : 'development',
+        devtool: isProduction ? 'source-map' : 'eval-source-map',
         entry: "./src/App.fsproj",
         output: {
             path: path.join(__dirname, "./public"),
@@ -16,7 +19,7 @@ module.exports = [
             publicPath: "/",
             contentBase: "./public",
             port: 8080,
-            host: 'localhost',
+            host: '192.168.1.217',
             allowedHosts: [
                 'localhost',
                 '0.0.0.0',
@@ -38,7 +41,8 @@ module.exports = [
             library: "Solver",
             libraryTarget: "umd",
         },
-        mode: "development",
+        mode: isProduction ? 'production' : 'development',
+        devtool: isProduction ? 'source-map' : 'eval-source-map',
         resolve: {
             symlinks: false
         },
@@ -66,3 +70,10 @@ module.exports = [
         target: 'webworker'
     }
 ]
+
+
+function hasArg(arg) {
+    return arg instanceof RegExp
+        ? process.argv.some(x => arg.test(x))
+        : process.argv.indexOf(arg) !== -1;
+}

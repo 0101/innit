@@ -10,18 +10,17 @@ open Animations
 open Init
 
 
-
 let update (msg : Msg) (state : State) =
     match msg with
 
     | SetWorker w -> { state with Worker = Some w }, Cmd.none
     | ChangeWorkerState workerState ->
-        Browser.Dom.console.info("Worker status:", workerState)
+        Console.info("Worker status:", workerState)
         state,
         match workerState with
         | WorkerStatus.TimeoutExpired
         | WorkerStatus.Killed ->
-            Browser.Dom.console.info "Restarting worker"
+            Console.info "Restarting worker"
             Cmd.batch [
                 Cmd.Worker.restart state.Worker
                 Cmd.ofMsg IdleCheck ]
@@ -45,7 +44,6 @@ let update (msg : Msg) (state : State) =
         match state.AnimationTimer with Some t -> Cmd.ofMsg (StopTimer t) | _ -> Cmd.none
 
     | Tick ->
-        Browser.Dom.console.info "Tick"
         let currentAnimations = state.CurrentAnimations |> List.choose (AdvanceAnimation state)
         let currentAnimations, animationQueue, newEmptyField, cmd =
             match currentAnimations, state.AnimationQueue with
@@ -53,7 +51,7 @@ let update (msg : Msg) (state : State) =
                 if x |> IsValidMove state then
                     Animate state x, rest, List.last x, Cmd.none
                 else
-                    Browser.Dom.console.warn ("Received invalid animation, discarding")
+                    Console.warn ("Received invalid animation, discarding")
                     [], [], state.EmptyField, Cmd.ofMsg IdleCheck
             | c, q -> c, q, state.EmptyField, Cmd.none
         let state =
@@ -73,7 +71,6 @@ let update (msg : Msg) (state : State) =
         state, match state.AnimationTimer with
                | Some t -> Cmd.none
                | _ ->
-                    Browser.Dom.console.info "Starting timer"
                     Cmd.ofSub (fun dispatch ->
                         let timer = Browser.Dom.window.setInterval((fun _ -> dispatch Tick), 1000 / 40)
                         dispatch (StartedTimer timer))
@@ -95,7 +92,7 @@ let update (msg : Msg) (state : State) =
         })
 
     | Idle ->
-        Browser.Dom.console.info "* IDLE"
+        Console.info "* IDLE"
         { state with IdleCheckInProgress = false
                      Idle = true
                      WorkerTimeout = SolverInitialTimeout
@@ -104,7 +101,7 @@ let update (msg : Msg) (state : State) =
         if Workers.Solver.IsSolved gameState
         then Cmd.none
         else
-            Browser.Dom.console.info "Executing worker"
+            Console.info "Executing worker"
             Cmd.Worker.exec state.Worker (gameState, SolverInitialTimeout) Solution
 
     | Solution (solutionType, solution) ->
@@ -113,7 +110,7 @@ let update (msg : Msg) (state : State) =
         let solverTimeout =
             match solutionType, solution with
             | Partial _, [] ->
-                Browser.Dom.console.info("Increasing solver timeout to", state.WorkerTimeout + SolverTimeoutStep)
+                Console.info("Increasing solver timeout to", state.WorkerTimeout + SolverTimeoutStep)
                 state.WorkerTimeout + SolverTimeoutStep
             | _ -> state.WorkerTimeout
 
@@ -122,16 +119,16 @@ let update (msg : Msg) (state : State) =
             Cmd.ofMsg StartTimer
             match solutionType with
             | Complete ->
-                Browser.Dom.console.info "Received Complete solution"
+                Console.info "Received Complete solution"
                 Cmd.none
             | Partial partiallySolvedState ->
-                Browser.Dom.console.info "Received Partial solution"
+                Console.info "Received Partial solution"
                 if solution = [] && solverTimeout > SolverMaxTimeout
                 then
-                    Browser.Dom.console.error "Failed to solve, giving up"
+                    Console.warn "Failed to solve, giving up"
                     Cmd.none
                 else
-                    Browser.Dom.console.info "Executing worker on partially solved state"
+                    Console.info "Executing worker on partially solved state"
                     Cmd.Worker.exec state.Worker (partiallySolvedState, solverTimeout) Solution
          ]
 

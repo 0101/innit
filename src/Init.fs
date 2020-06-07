@@ -54,9 +54,9 @@ let initialSetup (screenW, screenH) =
         AnimationTimer = None
         Items = RandomItems random (gridW, gridH) [
             { Hue = 000; Class = "mail"; Content = Link ContactEmail }
-            { Hue = 024; Class = "sc"; Content = Link ScLink }
-            { Hue = 192; Class = "gh"; Content = Link GhLink }
-            { Hue = 097; Class = "shuffle"; Content = Control Shuffle }
+            { Hue = 024; Class = "sc"; Content = LinkNew ScLink }
+            { Hue = 192; Class = "gh"; Content = LinkNew GhLink }
+            //{ Hue = 097; Class = "shuffle"; Content = Control Shuffle }
         ]
         LastUpdate = DateTime.Now
         IdleCheckInProgress = false
