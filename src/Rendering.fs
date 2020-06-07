@@ -77,8 +77,9 @@ let RenderGrid (state : State) =
 let RandomItems random (x, y) (items : HiddenItemSpec list) =
     let surroundings =
         if   x * y < 20 then id >> Set.singleton
-        elif x * y < 36 then xySurroundings
+        elif x * y < 51 then xySurroundings
                         else FullSurroundings
+
     let locations = RandomItemLocations random surroundings (x, y) |> Seq.take items.Length |> Seq.toList
 
     List.zip locations items

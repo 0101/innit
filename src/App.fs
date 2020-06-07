@@ -1,22 +1,13 @@
 module App
 
-open System
-
 open Elmish
 open Elmish.React
 open Fable.React
 open Fable.React.Props
 
-open Feliz.UseWorker
-
-open Types
-open Mechanics
 open Rendering
-open Animations
 open Init
 open Update
-
-
 
 
 
@@ -44,5 +35,4 @@ let resize _ =
 Program.mkProgram init update view
 |> Program.withSubscription resize
 |> Program.withReactSynchronous "elmish-app"
-//|> Program.withConsoleTrace
 |> Program.run
