@@ -6,6 +6,7 @@
     <ProjectReference Include="..\src\App.fsproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TestUtils.fs" />
     <Compile Include="Tests.fs" />
     <Compile Include="SolverTests.fs" />
   </ItemGroup>

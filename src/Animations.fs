@@ -13,10 +13,10 @@ let Animate (state : State) (path : Path) : Animation list =
                         Field = toX, toY
                         TargetLeft = float toX * 1.0<Sq>
                         TargetTop = float toY * 1.0<Sq> }
-            | Field.Empty -> Browser.Dom.console.warn("Unexpected empty field at", fromX, fromY)
+            | Empty -> Browser.Dom.console.warn("Unexpected empty field at", fromX, fromY)
     ]
     let newEmptyX, newEmptyY = List.last path
-    state.Grid.[int newEmptyX].[int newEmptyY] <- Field.Empty
+    state.Grid.[int newEmptyX].[int newEmptyY] <- Empty
     animations
 
 

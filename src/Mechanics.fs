@@ -98,3 +98,8 @@ let Swap (grid: Field[][]) (x1, y1) (x2, y2) =
 
 
 let ToCoords (x, y) = x * 1<Sq>, y * 1<Sq>
+
+
+let IsValidMove state = function
+    | [] -> true
+    | x::xs -> x = state.EmptyField

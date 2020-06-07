@@ -72,7 +72,7 @@ let Score state =
     //|> (+) (Random().Next(0, 1000))
 
 
-let Solve (gameState : GameState) : SolutionType * Position list =
+let Solve (gameState: GameState, timeout: float) : SolutionType * Position list =
 
     let start = DateTime.Now
 
@@ -86,7 +86,7 @@ let Solve (gameState : GameState) : SolutionType * Position list =
             let newSeen = Set.add gs seen
             let score = Score gs
             let bestScore, best = if score < bestScore then score, (gs, moveHistory) else bestScore, best
-            if (DateTime.Now - start).TotalSeconds > 1.0 then
+            if (DateTime.Now - start).TotalSeconds > timeout then
                 let partialState, partialSolution = best
                 Partial partialState, partialSolution |> List.rev
             else

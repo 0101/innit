@@ -9,8 +9,7 @@ open Mechanics
 open Workers.Solver
 
 
-type IntBetween0and3 =
-    static member Int32 () = Gen.elements [0..3] |> Arb.fromGen
+
 
 
 [<Property(Arbitrary = [| typeof<IntBetween0and3> |])>]
@@ -24,7 +23,7 @@ let ``Simple solver solution works`` () empty piece target =
         Pieces = set [{ Position = piece; Target = target }]
     }
 
-    let sType, solution = Solve gs
+    let sType, solution = Solve (gs, SolverInitialTimeout)
 
     let solvedGs = solution |> List.fold (fun gs move -> gs |> ApplyMove move) gs
 
@@ -38,7 +37,7 @@ let ``Solution to a solved state is empty`` gs =
 
     Assert.True (IsSolved gs)
 
-    let sType, solution = Solve gs
+    let sType, solution = Solve (gs, SolverInitialTimeout)
 
     Assert.Equal(Complete, sType)
     Assert.Equal<Position list>([], solution)
@@ -70,7 +69,7 @@ let ``Solution doesn't contain any back&forth moves`` () =
                  { Position = (2, 3)
                    Target = (1, 3) }] }
 
-    let _, solution = Solve gs
+    let _, solution = Solve (gs, SolverInitialTimeout)
     let backAndForth = solution |> List.windowed 3 |> List.filter (fun w -> w <> List.distinct w)
     Assert.True (backAndForth.Length = 0, sprintf "%A /// %A /// %A" gs solution backAndForth)
 
@@ -96,3 +95,13 @@ let ``Moving back & forth doesn't change the state`` () =
         |> ApplyMove (x, y)
 
     Assert.Equal (gs, gs')
+
+
+[<Property(Arbitrary = [| typeof<IntBetween100and2000> |])>]
+let ``Solver can solve real world use cases`` screen =
+    let state, _ = Init.initialSetup screen |> Update.update Shuffle
+
+    let gs = CreateGameState state
+    let sType, solution = Solve (gs, SolverMaxTimeout)
+
+    Assert.True ((Complete = sType), sprintf "%A" gs)

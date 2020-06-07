@@ -5,7 +5,7 @@ open System
 
 let SquareSize = 100;
 let PxPerSq = (float SquareSize) * 1.0<Px/Sq>
-let AnimationStep = 0.34<Sq>;
+let AnimationStep = 0.34<Sq>
 
 let _getChars = Seq.map (fun i -> (char) i) >> Seq.filter (Char.IsControl >> not) >> Seq.toArray
 let BasicChars = _getChars [0..127]
@@ -22,3 +22,7 @@ let ScLink = "https://soundcloud.com/architech"
 let GhLink = "https://github.com/0101"
 
 let IdleSeconds = 2.0
+
+let SolverInitialTimeout = 0.5
+let SolverMaxTimeout = 2.5
+let SolverTimeoutStep = 0.5

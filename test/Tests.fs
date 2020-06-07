@@ -66,7 +66,7 @@ let ``Random item locations don't overlap`` gridDimensions =
     Assert.Equal (locs.Length, locs |> List.distinct |> List.length)
 
 
-[<Property>]
+[<Property(Arbitrary = [| typeof<IntBetween5and20> |])>]
 let ``Random item locations are not next to each other`` gridDimensions =
     let locs = RandomItemLocations (Random()) gridDimensions |> Seq.toList
     for l1 in locs do
@@ -74,3 +74,13 @@ let ``Random item locations are not next to each other`` gridDimensions =
     if l1 <> l2 then
         Assert.False ((Surroundings l1) |> Set.contains l2, sprintf "Offending locations: %A %A" l1 l2)
 
+
+[<Property(Arbitrary = [| typeof<IntBetween5and20> |])>]
+let ``Item generator can place 4 items`` x y =
+    let item = {
+        Hue = 0
+        Class = "foo"
+        Content = Link "foo"
+    }
+    let result = Rendering.RandomItems (Random()) (x, y) [ item; item; item; item ]
+    ()

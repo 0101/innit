@@ -66,7 +66,7 @@ type Msg =
     | Idle
     | Solution of SolutionType * Solution
     | Shuffle
-    | SetWorker of Worker<GameState, SolutionType * Solution>
+    | SetWorker of Worker<GameState * float, SolutionType * Solution>
     | ChangeWorkerState of WorkerStatus
 
 
@@ -99,7 +99,8 @@ type State =
     LastUpdate: DateTime
     IdleCheckInProgress: bool
     Idle: bool
-    Worker: Worker<GameState, SolutionType * Solution> option
+    Worker: Worker<GameState * float, SolutionType * Solution> option
+    WorkerTimeout: float
   }
     interface System.IDisposable with
         member this.Dispose () =

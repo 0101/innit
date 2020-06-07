@@ -10,6 +10,8 @@
     <Compile Include="Rendering.fs" />
     <Compile Include="Animations.fs" />
     <Compile Include="Solver.fs" />
+    <Compile Include="Init.fs" />
+    <Compile Include="Update.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
   <ItemGroup>

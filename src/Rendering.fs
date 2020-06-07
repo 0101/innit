@@ -74,8 +74,9 @@ let RenderGrid (state : State) =
         |> Seq.toList
 
 
-let RandomItems random dimensions (items : HiddenItemSpec list) =
-    let locations = RandomItemLocations random dimensions |> Seq.take items.Length |> Seq.toList
+let RandomItems random (x, y) (items : HiddenItemSpec list) =
+    let locationGenerator = if x * y < 36 then FullyRandomLocations else RandomItemLocations
+    let locations = locationGenerator random (x, y) |> Seq.take items.Length |> Seq.toList
 
     List.zip locations items
     |> List.map (fun (location, item) -> {
