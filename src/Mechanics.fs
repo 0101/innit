@@ -59,7 +59,10 @@ let xySurroundings (x, y) = set [
     x, y + 1
 ]
 
-let RandomItemLocations (random : Random) surroundings (gridW, gridH) =
+let noSurroundings xy = set [ xy ]
+
+
+let RandomLocations surroundings (random : Random) (gridW, gridH) =
     let rec getLocationsFrom available = seq {
         if not (Set.isEmpty available) then
             let loc = available |> Set.toSeq |> Seq.sortBy (fun _ -> random.Next()) |> Seq.head
@@ -71,15 +74,7 @@ let RandomItemLocations (random : Random) surroundings (gridW, gridH) =
                             for y in [1..gridH - 2] do x, y ])
 
 
-let FullyRandomLocations (random : Random) (gridW, gridH) =
-    let rec getLocationsFrom available = seq {
-        if not (Set.isEmpty available) then
-            let loc = available |> Set.toSeq |> Seq.sortBy (fun _ -> random.Next()) |> Seq.head
-            yield loc
-            yield! getLocationsFrom (available |> Set.remove loc)
-    }
-    getLocationsFrom (set [ for x in [1..gridW - 2] do
-                            for y in [1..gridH - 2] do x, y ])
+let FullyRandomLocations r = RandomLocations noSurroundings r
 
 
 let GetPieces grid =

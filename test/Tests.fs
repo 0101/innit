@@ -62,13 +62,13 @@ let ``Segmented path can be put together again`` (from: Coords) (to': Coords) =
 [<Property>]
 let ``Random item locations don't overlap`` gridDimensions =
     for surroundingFunc in [(id >> Set.singleton); xySurroundings; FullSurroundings] do
-        let locs = RandomItemLocations (Random()) surroundingFunc gridDimensions |> Seq.toList
+        let locs = RandomLocations surroundingFunc (Random()) gridDimensions |> Seq.toList
         Assert.Equal (locs.Length, locs |> List.distinct |> List.length)
 
 
 [<Property(Arbitrary = [| typeof<IntBetween5and20> |])>]
 let ``Random item locations are not next to each other`` gridDimensions =
-    let locs = RandomItemLocations (Random()) FullSurroundings gridDimensions |> Seq.toList
+    let locs = RandomLocations FullSurroundings (Random()) gridDimensions |> Seq.toList
     for l1 in locs do
     for l2 in locs do
     if l1 <> l2 then
