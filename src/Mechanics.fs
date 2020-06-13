@@ -81,7 +81,7 @@ let GetPieces grid =
      set [ for x, row in grid |> Array.mapi (fun x r -> x, r) do
            for y, square in row |> Array.mapi (fun y f -> y, f) do
            match square with
-           | Occupied piece when piece.Type = Title -> (x, y), piece
+           | Occupied { TargetPosition = Some target } -> (x, y), target
            | _ -> () ]
 
 

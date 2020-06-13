@@ -15,7 +15,7 @@ let update (msg : Msg) (state : State) =
 
     | CursorMove (x, y) ->
         let shiftX, shiftY = CenterShift state
-        let coords = ToCoords (int (px2grid (x - shiftX)), int (px2grid (y - shiftY)))
+        let coords = (int (px2grid (x - shiftX)), int (px2grid (y - shiftY))) |> ToCoords
         let path = GetRandomPath state.Rng state.EmptySquare coords
         let segments = SegmentPath path
         { state with AnimationQueue = segments

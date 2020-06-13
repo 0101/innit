@@ -11,9 +11,9 @@ let CreateGameState (state : State) : GameState =
     { GridW = GridWidth state.Grid
       GridH = GridHeight state.Grid
       EmptySpace = int ex, int ey
-      Pieces = GetPieces state.Grid |> Set.map (fun (position, piece) -> {
+      Pieces = GetPieces state.Grid |> Set.map (fun (position, (tx, ty)) -> {
           Position = position
-          Target = piece.TargetPosition |> fst |> int, piece.TargetPosition |> snd |> int
+          Target = int tx, int ty
       }) }
 
 

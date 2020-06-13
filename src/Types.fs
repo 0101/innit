@@ -21,7 +21,7 @@ type Piece =
       Type: PieceType
       Left: float<Sq>
       Top: float<Sq>
-      TargetPosition: Coords }
+      TargetPosition: Coords option }
 
 type Square = Empty | Occupied of Piece
 
