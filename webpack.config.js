@@ -73,7 +73,8 @@ module.exports = [
                         loader: 'fable-loader',
                         options: {
                             allFiles: true,
-                            define: []
+                            define: [],
+                            silent: true,
                         }
                     }
                 },
