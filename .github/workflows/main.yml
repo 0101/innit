@@ -36,8 +36,6 @@ jobs:
       with:
         node-version: '12.x'
 
-    - run: rm -rf node_modules
-
     - run: npm install
     - run: npm run build
 
