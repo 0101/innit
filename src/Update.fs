@@ -13,23 +13,10 @@ open Init
 let update (msg : Msg) (state : State) =
     match msg with
 
-    | SetWorker w -> { state with Worker = Some w }, Cmd.none
-    | ChangeWorkerState workerState ->
-        Console.info("Worker status:", workerState)
-        state,
-        match workerState with
-        | WorkerStatus.TimeoutExpired
-        | WorkerStatus.Killed ->
-            Console.info "Restarting worker"
-            Cmd.batch [
-                Cmd.Worker.restart state.Worker
-                Cmd.ofMsg IdleCheck ]
-        | _ -> Cmd.none
-
     | CursorMove (x, y) ->
         let shiftX, shiftY = CenterShift state
         let coords = ToCoords (int (px2grid (x - shiftX)), int (px2grid (y - shiftY)))
-        let path = GetRandomPath state.Rng state.EmptyField coords
+        let path = GetRandomPath state.Rng state.EmptySquare coords
         let segments = SegmentPath path
         { state with AnimationQueue = segments
                      LastUpdate = DateTime.Now
@@ -43,21 +30,36 @@ let update (msg : Msg) (state : State) =
         { fst (init()) with ScreenWidth = x; ScreenHeight = y; Worker = state.Worker },
         match state.AnimationTimer with Some t -> Cmd.ofMsg (StopTimer t) | _ -> Cmd.none
 
+    | StartTimer ->
+        state,
+        match state.AnimationTimer with
+        | Some t -> Cmd.none
+        | _ -> Cmd.ofSub (fun dispatch ->
+                let tick _ = dispatch Tick
+                let interval = 1000 / TargetFPS
+                let timer = Browser.Dom.window.setInterval(tick, interval)
+                dispatch (StartedTimer timer))
+
+    | StartedTimer t -> { state with AnimationTimer = Some t }, Cmd.none
+
+    | StopTimer t ->
+        Browser.Dom.window.clearInterval t
+        { state with AnimationTimer = None }, Cmd.none
+
     | Tick ->
         let currentAnimations = state.CurrentAnimations |> List.choose (AdvanceAnimation state)
-        let currentAnimations, animationQueue, newEmptyField, cmd =
+        let currentAnimations, animationQueue, newEmptySquare, cmd =
             match currentAnimations, state.AnimationQueue with
-            | [], x::rest ->
-                if x |> IsValidMove state then
-                    Animate state x, rest, List.last x, Cmd.none
-                else
-                    Console.warn ("Received invalid animation, discarding")
-                    [], [], state.EmptyField, Cmd.ofMsg IdleCheck
-            | c, q -> c, q, state.EmptyField, Cmd.none
+            | [], move::rest when move |> IsValidMove state ->
+                Animate state move, rest, List.last move, Cmd.none
+            | [], _::_ ->
+                Console.warn ("Received invalid animation, discarding")
+                [], [], state.EmptySquare, Cmd.ofMsg IdleCheck
+            | c, q -> c, q, state.EmptySquare, Cmd.none
         let state =
           { state with CurrentAnimations = currentAnimations
                        AnimationQueue = animationQueue
-                       EmptyField = newEmptyField }
+                       EmptySquare = newEmptySquare }
         state,
         Cmd.batch [
             match state.CurrentAnimations, state.AnimationTimer with
@@ -66,20 +68,6 @@ let update (msg : Msg) (state : State) =
             | _          -> Cmd.none
             cmd
         ]
-
-    | StartTimer ->
-        state, match state.AnimationTimer with
-               | Some t -> Cmd.none
-               | _ ->
-                    Cmd.ofSub (fun dispatch ->
-                        let timer = Browser.Dom.window.setInterval((fun _ -> dispatch Tick), 1000 / 40)
-                        dispatch (StartedTimer timer))
-
-    | StartedTimer t -> { state with AnimationTimer = Some t }, Cmd.none
-
-    | StopTimer t ->
-        Browser.Dom.window.clearInterval t
-        { state with AnimationTimer = None }, Cmd.none
 
     | IdleCheck ->
         { state with IdleCheckInProgress = true },
@@ -103,6 +91,20 @@ let update (msg : Msg) (state : State) =
         else
             Console.info "Executing worker"
             Cmd.Worker.exec state.Worker (gameState, SolverInitialTimeout) Solution
+
+    | SetWorker w -> { state with Worker = Some w }, Cmd.none
+
+    | ChangeWorkerState workerStatus ->
+        Console.info("Worker status:", workerStatus)
+        state,
+        match workerStatus with
+        | WorkerStatus.TimeoutExpired
+        | WorkerStatus.Killed ->
+            Console.info "Restarting worker"
+            Cmd.batch [
+                Cmd.Worker.restart state.Worker
+                Cmd.ofMsg IdleCheck ]
+        | _ -> Cmd.none
 
     | Solution (solutionType, solution) ->
         if not state.Idle then state, Cmd.none

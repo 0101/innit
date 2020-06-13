@@ -27,7 +27,7 @@ let view (state : State) dispatch =
 let resize _ =
     Cmd.ofSub (fun dispatch ->
         Browser.Dom.window.onresize <- (fun _ ->
-            let dims = int Browser.Dom.window.innerWidth, int Browser.Dom.window.innerHeight
+            let dims = int Browser.Dom.window.innerWidth * 1<Px>, int Browser.Dom.window.innerHeight * 1<Px>
             PageResize dims |> dispatch))
 
 

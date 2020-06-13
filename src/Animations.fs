@@ -10,10 +10,10 @@ let Animate (state : State) (path : Path) : Animation list =
             | Occupied piece ->
                 state.Grid.[int toX].[int toY] <- Occupied piece
                 yield { Piece = piece
-                        Field = toX, toY
+                        Square = toX, toY
                         TargetLeft = float toX * 1.0<Sq>
                         TargetTop = float toY * 1.0<Sq> }
-            | Empty -> Console.warn("Unexpected empty field at", fromX, fromY)
+            | Empty -> Console.warn("Unexpected empty square at", fromX, fromY)
     ]
     let newEmptyX, newEmptyY = List.last path
     state.Grid.[int newEmptyX].[int newEmptyY] <- Empty
@@ -30,7 +30,7 @@ let AdvanceAnimation (state : State) (animation : Animation) : Animation option 
     let yDirection = sign yDiff |> float
     let newLeft = fRound (animation.Piece.Left + xDirection * (min AnimationStep (abs xDiff)))
     let newTop = fRound (animation.Piece.Top + yDirection * (min AnimationStep (abs yDiff)))
-    let x, y = animation.Field
+    let x, y = animation.Square
     let newPiece = { animation.Piece with Left = newLeft; Top = newTop }
     state.Grid.[int x].[int y] <- Occupied newPiece
     if grid2px newPiece.Left = grid2px animation.TargetLeft && grid2px newPiece.Top = grid2px animation.TargetTop

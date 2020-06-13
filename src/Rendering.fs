@@ -17,7 +17,7 @@ let px2grid (px: int<Px>) : float<Sq> =
 
 
 let CenterShift state =
-    let center = state.ScreenWidth / 2 * 1<Px>, state.ScreenHeight / 2 * 1<Px>
+    let center = state.ScreenWidth / 2, state.ScreenHeight / 2
     let gridWidth = state.Grid.Length * 1<Sq>
     let gridHeight = state.Grid.[0].Length * 1<Sq>
     let screenCx, screenCy = center
@@ -25,7 +25,7 @@ let CenterShift state =
     screenCx - gridCx, screenCy - gridCy
 
 
-let RandomField (random : System.Random) x y = {
+let RandomPiece (random : System.Random) x y = {
     Content = if random.NextDouble() < BasicCharProbability
               then BasicChars.[random.Next(BasicChars.Length)]
               else AllChars.[random.Next(AllChars.Length)]
@@ -36,8 +36,8 @@ let RandomField (random : System.Random) x y = {
     TargetPosition = 0<Sq>, 0<Sq>
 }
 
-let TitleField (r: System.Random) x y char =
-  { RandomField r x y with
+let TitlePiece (r: System.Random) x y char =
+  { RandomPiece r x y with
         Content = char
         Type = PieceType.Title
         TargetPosition = ToCoords (x, y)
@@ -47,37 +47,32 @@ let TitleField (r: System.Random) x y char =
 let RenderGrid (state : State) =
     let shiftX, shiftY = CenterShift state
     state.Grid |> Seq.collect (Seq.map (function
-        | Field.Empty -> div [ Class "empty" ] []
+        | Square.Empty -> div [ Class "empty" ] []
         | Occupied piece ->
             let bg, shadow, z, cls =
-                match state.Items |> List.tryFind (fun i -> i.Left = piece.Left && i.Top = piece.Top ) with
-                | Some item ->
-                    let c = sprintf "hsl(%d, 80%%, 15%%)" item.Hue
-                    c, (sprintf "0px 0px 17px 5px %s" c), "9000", " highlighted"
+                match state.Items |> List.tryFind (fun i -> i.Left = piece.Left && i.Top = piece.Top) with
+                | Some item -> HighlightColor item.Hue, HighlightGlow item.Hue, "9000", " highlighted"
                 | None -> piece.Color, "none", "auto", ""
             div [ Class ("piece" + cls + match piece.Type with PieceType.Title -> " title" | _ -> "")
                   Style [
-                    Top (grid2px piece.Top + shiftY)
-                    Left (grid2px piece.Left + shiftX)
-                    Width SquareSize
-                    Height SquareSize
-                    BackgroundColor bg
-                    BoxShadow shadow
-                    ZIndex z
-                  ]
-                ]
+                      Top (grid2px piece.Top + shiftY)
+                      Left (grid2px piece.Left + shiftX)
+                      Width SquareSize
+                      Height SquareSize
+                      BackgroundColor bg
+                      BoxShadow shadow
+                      ZIndex z
+                  ] ]
                 [ div [ Class "inner" ]
-                      [ p [ Class "symbol" ] [ str (string piece.Content) ]
-                        //p [ Class "info" ] [ str (string (int piece.Content))]
-                      ] ]
+                      [ p [ Class "symbol" ] [ str (string piece.Content) ] ] ]
         ))
         |> Seq.toList
 
 
 let RandomItems random (x, y) (items : HiddenItemSpec list) =
     let surroundings =
-        if   x * y < 20 then noSurroundings
-        elif x * y < 51 then xySurroundings
+        if   x * y < 20 then NoSurroundings
+        elif x * y < 51 then XYSurroundings
                         else FullSurroundings
 
     let locations = RandomLocations surroundings random (x, y) |> Seq.take items.Length |> Seq.toList
@@ -98,17 +93,17 @@ let RenderItems state dispatch =
     |> Seq.map (fun item ->
         div [ Class "item"
               Style [
-                    Top (grid2px item.Top + shiftY)
-                    Left (grid2px item.Left + shiftX)
-                    Width SquareSize
-                    Height SquareSize
-                    Color (sprintf "hsl(%d, 80%%, 40%%)" item.Hue)
+                Top (grid2px item.Top + shiftY)
+                Left (grid2px item.Left + shiftX)
+                Width SquareSize
+                Height SquareSize
+                Color (sprintf "hsl(%d, 80%%, 40%%)" item.Hue)
               ] ]
             [ match item.Content with
-              | Link href   -> a [ Class item.Class; Href href ] [ ]
-              | LinkNew href   -> a [ Class item.Class; Href href; Target "_blank";  ] [ ]
-              | Control msg -> a [ Class item.Class; Href ("#" + item.Class);
-                                   OnClick (fun e ->
-                                            e.preventDefault()
-                                            dispatch msg) ] [ ]
+              | Link href    -> a [ Class item.Class; Href href ] [ ]
+              | LinkNew href -> a [ Class item.Class; Href href; Target "_blank" ] [ ]
+              | Control msg  -> a [ Class item.Class; Href ("#" + item.Class)
+                                    OnClick (fun e ->
+                                             e.preventDefault()
+                                             dispatch msg) ] [ ]
             ] )

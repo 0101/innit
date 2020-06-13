@@ -7,7 +7,7 @@ open Feliz.UseWorker
 
 
 let CreateGameState (state : State) : GameState =
-    let ex, ey = state.EmptyField
+    let ex, ey = state.EmptySquare
     { GridW = GridWidth state.Grid
       GridH = GridHeight state.Grid
       EmptySpace = int ex, int ey

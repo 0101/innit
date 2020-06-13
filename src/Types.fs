@@ -1,27 +1,19 @@
 [<AutoOpen>]
 module Types
 
-
 open Feliz.UseWorker
 open System
 
 
-[<Measure>]
-type Sq
-
-[<Measure>]
-type Px
+[<Measure>] type Sq
+[<Measure>] type Px
 
 type Coords = int<Sq> * int<Sq>
 type Path = Coords list
 
-type Axis =
-    | X
-    | Y
+type Axis = X | Y
 
-type PieceType =
-    | Regular
-    | Title
+type PieceType = Regular | Title
 
 type Piece =
     { Content: char
@@ -31,13 +23,11 @@ type Piece =
       Top: float<Sq>
       TargetPosition: Coords }
 
-type Field =
-    | Empty
-    | Occupied of Piece
+type Square = Empty | Occupied of Piece
 
 type Animation =
     { Piece: Piece
-      Field: Coords
+      Square: Coords
       TargetLeft: float<Sq>
       TargetTop: float<Sq> }
 
@@ -56,15 +46,13 @@ type GameState =
       EmptySpace: Position
       Pieces: Set<GamePiece> }
 
-type SolutionType =
-    | Complete
-    | Partial of GameState
+type SolutionType = Complete | Partial of GameState
 
 /////////////////////
 
 type Msg =
     | CursorMove of int<Px> * int<Px>
-    | PageResize of int * int
+    | PageResize of int<Px> * int<Px>
     | StartTimer
     | StartedTimer of float
     | StopTimer of float
@@ -95,10 +83,10 @@ type HiddenItem =
 
 type State =
     { Rng: Random
-      ScreenWidth: int
-      ScreenHeight: int
-      EmptyField: int<Sq> * int<Sq>
-      Grid: Field [] []
+      ScreenWidth: int<Px>
+      ScreenHeight: int<Px>
+      EmptySquare: int<Sq> * int<Sq>
+      Grid: Square [] []
       CurrentAnimations: Animation list
       AnimationQueue: Path list
       AnimationTimer: float option

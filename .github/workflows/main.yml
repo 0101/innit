@@ -35,9 +35,9 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-    
+
     - run: rm -rf node_modules
-      
+
     - run: npm install
     - run: npm run build
 
@@ -46,4 +46,4 @@ jobs:
       with:
         ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         BRANCH: gh-pages # The branch the action should deploy to.
-        FOLDER: public # The folder the action should deploy.
+        FOLDER: deploy # The folder the action should deploy.

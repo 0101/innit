@@ -1,6 +1,5 @@
 module Init
 
-
 open System
 open Rendering
 open Mechanics
@@ -33,22 +32,21 @@ let initialSetup (screenW, screenH) =
     let random = Random()
     let title = if gridW < 7 && gridH > 5 then verticalTitle else horizontalTitle
 
-    let makeField x y =
+    let makePiece x y =
         match title |> Map.tryFind (- (centerY - y), - (centerX - x)) with
-        | Some c -> TitleField random x y c
-        | None -> RandomField random x y
+        | Some c -> TitlePiece random x y c
+        | None -> RandomPiece random x y
 
     {
         Rng = random
         ScreenWidth = screenW
         ScreenHeight = screenH
-        EmptyField = InitialEmptyField |> ToCoords
+        EmptySquare = InitialEmptySquare |> ToCoords
         Grid = Array.init gridW (fun x ->
                Array.init gridH (fun y ->
                 match x, y with
-                | z when z = InitialEmptyField -> Empty
-                | _ -> Occupied (makeField x y)
-        ))
+                | z when z = InitialEmptySquare -> Empty
+                | _ -> Occupied (makePiece x y)))
         CurrentAnimations = []
         AnimationQueue = []
         AnimationTimer = None
@@ -56,7 +54,7 @@ let initialSetup (screenW, screenH) =
             { Hue = 000; Class = "mail"; Content = Link ContactEmail }
             { Hue = 024; Class = "sc"; Content = LinkNew ScLink }
             { Hue = 192; Class = "gh"; Content = LinkNew GhLink }
-            //{ Hue = 097; Class = "shuffle"; Content = Control Shuffle }
+            // { Hue = 097; Class = "shuffle"; Content = Control Shuffle }
         ]
         LastUpdate = DateTime.Now
         IdleCheckInProgress = false
@@ -67,7 +65,7 @@ let initialSetup (screenW, screenH) =
 
 
 let init () =
-    let screenW = int Browser.Dom.window.innerWidth
-    let screenH = int Browser.Dom.window.innerHeight
-    initialSetup (screenW, screenH), Cmd.Worker.create Workers.Solver.WorkerSolve SetWorker ChangeWorkerState
-
+    let screenW = int Browser.Dom.window.innerWidth * 1<Px>
+    let screenH = int Browser.Dom.window.innerHeight * 1<Px>
+    initialSetup (screenW, screenH),
+    Cmd.Worker.create Workers.Solver.WorkerSolve SetWorker ChangeWorkerState
