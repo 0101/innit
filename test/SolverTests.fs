@@ -84,7 +84,7 @@ let ``Moving back & forth doesn't change the state`` () =
 
 [<Property(Arbitrary = [| typeof<IntBetween100and2000> |])>]
 let ``Solver can solve real world use cases`` screen =
-    let state, _ = Init.initialSetup screen |> Update.update Shuffle
+    let state, _ = Init.initialSetup screen false |> Update.update Shuffle
 
     let gs = CreateGameState state
     let sType, solution = Solve (gs, SolverMaxTimeout)

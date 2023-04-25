@@ -61,6 +61,7 @@ type Msg =
     | Idle
     | Solution of SolutionType * Solution
     | Shuffle
+    | IntroFinished
     | SetWorker of Worker<GameState * float, SolutionType * Solution>
     | ChangeWorkerState of WorkerStatus
 
@@ -81,13 +82,15 @@ type HiddenItem =
       Top: float<Sq>
       Left: float<Sq> }
 
+type Phase = Intro1 | Intro2 | RegularOperation
+
 type State =
     { Rng: Random
       ScreenWidth: int<Px>
       ScreenHeight: int<Px>
       EmptySquare: Coords
       Grid: Square [] []
-      Title: (int * int) list
+      Title: ((int * int) * char) list
       CurrentAnimations: Animation list
       AnimationQueue: Path list
       AnimationTimer: float option
@@ -95,6 +98,7 @@ type State =
       LastUpdate: DateTime
       IdleCheckInProgress: bool
       Idle: bool
+      Phase: Phase
       Worker: Worker<GameState * float, SolutionType * Solution> option
       WorkerTimeout: float }
     interface System.IDisposable with

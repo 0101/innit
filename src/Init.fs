@@ -4,6 +4,7 @@ open System
 open Rendering
 open Mechanics
 open Elmish
+open Workers.Solver
 
 
 let horizontalTitle = [
@@ -23,7 +24,7 @@ let verticalTitle = [
 ]
 
 
-let initialSetup (screenW, screenH) =
+let initialSetup (screenW, screenH) intro =
     let makeOdd x = if x % 2 = 0 then x + 1 else x
     let gridW = max 5 (makeOdd (screenW / SquareSize + 1))
     let gridH = max 5 (makeOdd (screenH / SquareSize + 1))
@@ -50,7 +51,7 @@ let initialSetup (screenW, screenH) =
                 match x, y with
                 | z when z = InitialEmptySquare -> Empty
                 | _ -> Occupied (makePiece x y)))
-        Title = title |> Map.toSeq |> Seq.map fst |> Seq.toList
+        Title = title |> Map.toList
         CurrentAnimations = []
         AnimationQueue = []
         AnimationTimer = None
@@ -58,27 +59,31 @@ let initialSetup (screenW, screenH) =
             { Hue = 000; Class = "mail"; Content = Link ContactEmail }
             { Hue = 024; Class = "sc"; Content = LinkNew ScLink }
             { Hue = 192; Class = "gh"; Content = LinkNew GhLink }
-            { Hue = 097; Class = "shuffle"; Content = Control Shuffle }
+            //{ Hue = 097; Class = "shuffle"; Content = Control Shuffle }
         ]
         LastUpdate = DateTime.Now
         IdleCheckInProgress = false
         Idle = false
+        Phase = if gridW < 7 || not intro then RegularOperation else Intro1
         Worker = None
         WorkerTimeout = SolverInitialTimeout
     }
 
 let initialRandomization (state: State) =
-    state.Title
-    |> Seq.zip (state.Title |> Seq.map FullSurroundings |> Seq.map (fun x -> x |> Seq.sortBy (fun _ -> state.Rng.Next()) |> Seq.head ))
-    |> Seq.sortBy (fun _ -> state.Rng.Next())
-    |> Seq.take 3
-    |> Seq.iter (fun (x, y) -> Swap state.Grid x y)
+    while state.Phase = Intro1 && state |> CreateGameState |> IsSolved do
+        let titlePositions = state.Title |> Seq.map fst
+        titlePositions
+        |> Seq.zip (titlePositions  |> Seq.map FullSurroundings |> Seq.map (Seq.sortBy (fun _ -> state.Rng.Next()) >> Seq.head))
+        |> Seq.sortBy (fun _ -> state.Rng.Next())
+        |> Seq.take 3
+        |> Seq.iter (fun (x, y) -> Swap state.Grid x y)
     state
 
-let init () =
+
+let init intro =
     let screenW = int Browser.Dom.window.innerWidth * 1<Px>
     let screenH = int Browser.Dom.window.innerHeight * 1<Px>
-    initialSetup (screenW, screenH) |> initialRandomization,
+    initialSetup (screenW, screenH) intro |> initialRandomization,
     Cmd.batch [
         Cmd.Worker.create Workers.Solver.WorkerSolve SetWorker ChangeWorkerState
         Cmd.ofMsg Idle

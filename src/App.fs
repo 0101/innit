@@ -11,7 +11,9 @@ open Update
 
 
 let view (state : State) dispatch =
-    let move (e: Browser.Types.MouseEvent) = CursorMove (int e.pageX * 1<Px>, int e.pageY * 1<Px>) |> dispatch
+    let move (e: Browser.Types.MouseEvent) =
+        if state.Phase = RegularOperation then
+            CursorMove (int e.pageX * 1<Px>, int e.pageY * 1<Px>) |> dispatch
 
     div [] [
         div [] (RenderItems state dispatch)
@@ -31,7 +33,7 @@ let resize _ =
             PageResize dims |> dispatch))
 
 
-Program.mkProgram init update view
+Program.mkProgram (fun () -> init true) update view
 |> Program.withSubscription resize
 |> Program.withReactSynchronous "elmish-app"
 |> Program.run

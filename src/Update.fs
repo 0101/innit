@@ -27,7 +27,7 @@ let update (msg : Msg) (state : State) =
         ]
 
     | PageResize (x, y) ->
-        { fst (init()) with ScreenWidth = x; ScreenHeight = y; Worker = state.Worker },
+        { fst (init false) with ScreenWidth = x; ScreenHeight = y; Worker = state.Worker },
         match state.AnimationTimer with Some t -> Cmd.ofMsg (StopTimer t) | _ -> Cmd.none
 
     | StartTimer ->
@@ -44,7 +44,16 @@ let update (msg : Msg) (state : State) =
 
     | StopTimer t ->
         Browser.Dom.window.clearInterval t
-        { state with AnimationTimer = None }, Cmd.none
+
+        match state.Phase with
+        | Intro1 ->
+            { state with AnimationTimer = None; Phase = Intro2 },
+            Cmd.ofSub (fun dispatch ->
+                Browser.Dom.window.setTimeout((fun _ -> dispatch IntroFinished), 1500) |> ignore)
+        | _ ->
+            { state with AnimationTimer = None }, Cmd.none
+
+    | IntroFinished -> { state with Phase = RegularOperation }, Cmd.none
 
     | Tick ->
         let currentAnimations = state.CurrentAnimations |> List.choose (AdvanceAnimation state)
