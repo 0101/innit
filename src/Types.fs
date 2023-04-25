@@ -38,7 +38,7 @@ type Solution = Position list
 
 type GamePiece =
     { Position: Position
-      Targets: Position Set }
+      Targets: Position array }
 
 type GameState =
     { GridW: int

@@ -13,11 +13,11 @@ let CreateGameState (state : State) : GameState =
       EmptySpace = int ex, int ey
       Pieces = GetPieces state.Grid |> Set.map (fun (position, targets) -> {
           Position = position
-          Targets = targets |> Set.map coordsToPosition
+          Targets = targets |> Seq.map coordsToPosition |> Seq.toArray
       }) }
 
 
-let PieceOnTarget p = p.Targets |> Set.contains p.Position
+let PieceOnTarget p = p.Targets |> Array.contains p.Position
 
 
 let IsSolved state = state.Pieces |> Set.forall PieceOnTarget
@@ -61,8 +61,6 @@ let Score state =
 
 
 let Solve (gameState: GameState, timeout: float) : SolutionType * Position list =
-
-    Console.info "Worker Solve"
 
     let start = DateTime.Now
 
