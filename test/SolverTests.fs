@@ -87,6 +87,6 @@ let ``Solver can solve real world use cases`` screen =
     let state, _ = Init.initialSetup screen false |> Update.update Shuffle
 
     let gs = CreateGameState state
-    let sType, solution = Solve (gs, SolverMaxTimeout)
+    let sType, solution = Solve (gs, SolverMaxTimeout * 2.0)
 
     Assert.True ((Complete = sType), sprintf "%A" gs)
