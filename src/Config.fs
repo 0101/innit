@@ -5,7 +5,7 @@ open System
 
 let SquareSize = 100<Px>;
 let PxPerSq = (float SquareSize) * 1.0<Px/Sq>
-let AnimationStep = 0.34<Sq>
+let AnimationStep = 0.4<Sq>
 let TargetFPS = 40
 
 let _getChars = Seq.map (fun i -> (char) i) >> Seq.filter (Char.IsControl >> not) >> Seq.toArray

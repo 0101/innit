@@ -21,7 +21,7 @@ type Piece =
       Type: PieceType
       Left: float<Sq>
       Top: float<Sq>
-      TargetPosition: Coords option }
+      TargetPosition: Coords Set }
 
 type Square = Empty | Occupied of Piece
 
@@ -38,13 +38,13 @@ type Solution = Position list
 
 type GamePiece =
     { Position: Position
-      Target: Position }
+      Targets: Position Set }
 
 type GameState =
     { GridW: int
       GridH: int
       EmptySpace: Position
-      Pieces: Set<GamePiece> }
+      Pieces: GamePiece Set }
 
 type SolutionType = Complete | Partial of GameState
 
@@ -85,8 +85,9 @@ type State =
     { Rng: Random
       ScreenWidth: int<Px>
       ScreenHeight: int<Px>
-      EmptySquare: int<Sq> * int<Sq>
+      EmptySquare: Coords
       Grid: Square [] []
+      Title: (int * int) list
       CurrentAnimations: Animation list
       AnimationQueue: Path list
       AnimationTimer: float option

@@ -76,12 +76,11 @@ let RandomLocations surroundings (random : Random) (gridW, gridH) =
 
 let FullyRandomLocations r = RandomLocations NoSurroundings r
 
-
 let GetPieces grid =
      set [ for x, row in grid |> Array.mapi (fun x r -> x, r) do
            for y, square in row |> Array.mapi (fun y f -> y, f) do
            match square with
-           | Occupied { TargetPosition = Some target } -> (x, y), target
+           | Occupied { TargetPosition = targets } when not targets.IsEmpty -> (x, y), targets
            | _ -> () ]
 
 
@@ -89,6 +88,7 @@ let GridWidth grid = Array.length grid
 
 let GridHeight (grid: 'a[][]) = grid.[0].Length
 
+let GridSize grid = GridWidth grid, GridHeight grid
 
 let Swap (grid: Square[][]) (x1, y1) (x2, y2) =
     let p1 = match grid.[x1].[y1] with

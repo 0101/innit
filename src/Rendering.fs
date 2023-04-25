@@ -33,14 +33,14 @@ let RandomPiece (random : System.Random) x y = {
     Top  = float y * 1.0<Sq>
     Color = PieceColor random
     Type = Regular
-    TargetPosition = None
+    TargetPosition = Set.empty
 }
 
-let TitlePiece (r: System.Random) x y char =
+let TitlePiece (r: System.Random) x y char targets =
   { RandomPiece r x y with
         Content = char
         Type = PieceType.Title
-        TargetPosition = Some ((x, y) |> ToCoords) }
+        TargetPosition = targets |> Seq.map ToCoords |> Set }
 
 
 let RenderGrid (state : State) =
