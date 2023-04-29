@@ -4,6 +4,14 @@
         font-weight: normal;
         font-style: normal;
     }
+
+    @keyframes light-up {
+      from { filter: saturate(0%); filter: brightness(50%); }
+      to   { filter: saturate(100%); filter: brightness(100%) }
+    }
+
+    .highlighted.piece.light-up { animation-name: light-up; animation-duration: 1s; }
+
     body {padding: 0; margin: 0; overflow: hidden;  background-color: #000; color: #272727; font-family: 'droid_sansregular', sans-serif; }
     ::-moz-selection { background-color: transparent; color: orange }
     ::selection { background-color: transparent; color: orange }
@@ -22,4 +30,4 @@
     .item .mail {background-image: url("mail.png"); }
     .item .sc {background-image: url("sc.png"); }
     .item .gh {background-image: url("gh.png"); }
-    .noscript { color: hsl(0, 80%, 20%); font-size: 50px; text-align: center; padding: 50px;}</style></head><body><div id="elmish-app" class="elmish-app"><div class="noscript"><noscript>No script no fun</noscript></div></div><script src="1.7eef7d8e61f3ef398ac7.innit.js"></script><script src="9156144c61a603555aef.innit.js"></script></body></html>
+    .noscript { color: hsl(0, 80%, 20%); font-size: 50px; text-align: center; padding: 50px;}</style></head><body><div id="elmish-app" class="elmish-app"><div class="noscript"><noscript>No script no fun</noscript></div></div><script src="1.80ae072162aab0013717.innit.js"></script><script src="0276490ad4b2e5590456.innit.js"></script></body></html>
