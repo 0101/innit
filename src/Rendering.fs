@@ -70,7 +70,7 @@ let RenderGrid (state : State) =
 
 let RandomItems random (x, y) (items : HiddenItemSpec list) =
     let surroundings =
-        if   x * y < 20 then NoSurroundings
+        if   x * y < 26 then NoSurroundings
         elif x * y < 51 then XYSurroundings
                         else FullSurroundings
 
