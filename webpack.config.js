@@ -22,11 +22,11 @@ module.exports = [
             publicPath: "/",
             contentBase: "./public",
             port: 8080,
-            host: '192.168.1.217',
+            host: '192.168.1.145',
             allowedHosts: [
                 'localhost',
                 '0.0.0.0',
-                '192.168.1.217'
+                '192.168.1.145'
             ]
         },
         module: {

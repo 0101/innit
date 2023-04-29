@@ -21,7 +21,7 @@ type Piece =
       Type: PieceType
       Left: float<Sq>
       Top: float<Sq>
-      TargetPosition: Coords option }
+      TargetPosition: Coords Set }
 
 type Square = Empty | Occupied of Piece
 
@@ -38,13 +38,13 @@ type Solution = Position list
 
 type GamePiece =
     { Position: Position
-      Target: Position }
+      Targets: Position array }
 
 type GameState =
     { GridW: int
       GridH: int
       EmptySpace: Position
-      Pieces: Set<GamePiece> }
+      Pieces: GamePiece Set }
 
 type SolutionType = Complete | Partial of GameState
 
@@ -61,6 +61,7 @@ type Msg =
     | Idle
     | Solution of SolutionType * Solution
     | Shuffle
+    | IntroFinished
     | SetWorker of Worker<GameState * float, SolutionType * Solution>
     | ChangeWorkerState of WorkerStatus
 
@@ -81,12 +82,15 @@ type HiddenItem =
       Top: float<Sq>
       Left: float<Sq> }
 
+type Phase = Intro1 | Intro2 | RegularOperation
+
 type State =
     { Rng: Random
       ScreenWidth: int<Px>
       ScreenHeight: int<Px>
-      EmptySquare: int<Sq> * int<Sq>
+      EmptySquare: Coords
       Grid: Square [] []
+      Title: ((int * int) * char) list
       CurrentAnimations: Animation list
       AnimationQueue: Path list
       AnimationTimer: float option
@@ -94,6 +98,7 @@ type State =
       LastUpdate: DateTime
       IdleCheckInProgress: bool
       Idle: bool
+      Phase: Phase
       Worker: Worker<GameState * float, SolutionType * Solution> option
       WorkerTimeout: float }
     interface System.IDisposable with

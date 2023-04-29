@@ -12,6 +12,14 @@
         font-weight: normal;
         font-style: normal;
     }
+
+    @keyframes light-up {
+      from { filter: saturate(0%); filter: brightness(50%); }
+      to   { filter: saturate(100%); filter: brightness(100%) }
+    }
+
+    .highlighted.piece.light-up { animation-name: light-up; animation-duration: 1s; }
+
     body {padding: 0; margin: 0; overflow: hidden;  background-color: #000; color: #272727; font-family: 'droid_sansregular', sans-serif; }
     ::-moz-selection { background-color: transparent; color: orange }
     ::selection { background-color: transparent; color: orange }

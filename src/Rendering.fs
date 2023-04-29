@@ -33,14 +33,14 @@ let RandomPiece (random : System.Random) x y = {
     Top  = float y * 1.0<Sq>
     Color = PieceColor random
     Type = Regular
-    TargetPosition = None
+    TargetPosition = Set.empty
 }
 
-let TitlePiece (r: System.Random) x y char =
+let TitlePiece (r: System.Random) x y char targets =
   { RandomPiece r x y with
         Content = char
         Type = PieceType.Title
-        TargetPosition = Some ((x, y) |> ToCoords) }
+        TargetPosition = targets |> Seq.map ToCoords |> Set }
 
 
 let RenderGrid (state : State) =
@@ -50,8 +50,8 @@ let RenderGrid (state : State) =
         | Occupied piece ->
             let bg, shadow, z, cls =
                 match state.Items |> List.tryFind (fun i -> i.Left = piece.Left && i.Top = piece.Top) with
-                | Some item -> HighlightColor item.Hue, HighlightGlow item.Hue, "9000", " highlighted"
-                | None -> piece.Color, "none", "auto", ""
+                | Some item when state.Phase <> Intro1 -> HighlightColor item.Hue, HighlightGlow item.Hue, "9000", " highlighted" + if state.Phase = Intro2 then " light-up" else ""
+                | _ -> piece.Color, "none", "auto", ""
             div [ Class ("piece" + cls + match piece.Type with PieceType.Title -> " title" | _ -> "")
                   Style [
                       Top (grid2px piece.Top + shiftY)
@@ -86,23 +86,24 @@ let RandomItems random (x, y) (items : HiddenItemSpec list) =
     })
 
 
-let RenderItems state dispatch =
+let RenderItems state dispatch = seq {
     let shiftX, shiftY = CenterShift state
-    state.Items
-    |> Seq.map (fun item ->
-        div [ Class "item"
-              Style [
-                Top (grid2px item.Top + shiftY)
-                Left (grid2px item.Left + shiftX)
-                Width SquareSize
-                Height SquareSize
-                Color (sprintf "hsl(%d, 80%%, 40%%)" item.Hue)
-              ] ]
-            [ match item.Content with
-              | Link href    -> a [ Class item.Class; Href href ] [ ]
-              | LinkNew href -> a [ Class item.Class; Href href; Target "_blank" ] [ ]
-              | Control msg  -> a [ Class item.Class; Href ("#" + item.Class)
-                                    OnClick (fun e ->
-                                             e.preventDefault()
-                                             dispatch msg) ] [ ]
-            ] )
+    if state.Phase <> Intro1 then
+        for item in state.Items do
+            div [ Class "item"
+                  Style [
+                    Top (grid2px item.Top + shiftY)
+                    Left (grid2px item.Left + shiftX)
+                    Width SquareSize
+                    Height SquareSize
+                    Color (sprintf "hsl(%d, 80%%, 40%%)" item.Hue)
+                  ] ]
+                [ match item.Content with
+                  | Link href    -> a [ Class item.Class; Href href ] [ ]
+                  | LinkNew href -> a [ Class item.Class; Href href; Target "_blank" ] [ ]
+                  | Control msg  -> a [ Class item.Class; Href ("#" + item.Class)
+                                        OnClick (fun e ->
+                                                 e.preventDefault()
+                                                 dispatch msg) ] [ ]
+                ]
+    }
