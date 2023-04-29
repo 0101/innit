@@ -49,7 +49,7 @@ let update (msg : Msg) (state : State) =
         | Intro1 ->
             { state with AnimationTimer = None; Phase = Intro2 },
             Cmd.ofSub (fun dispatch ->
-                Browser.Dom.window.setTimeout((fun _ -> dispatch IntroFinished), 1500) |> ignore)
+                Browser.Dom.window.setTimeout((fun _ -> dispatch IntroFinished), 1000) |> ignore)
         | _ ->
             { state with AnimationTimer = None }, Cmd.none
 
