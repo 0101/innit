@@ -1,6 +1,5 @@
-﻿module Update
+module Update
 
-open Feliz.UseWorker
 open Elmish
 
 open Rendering
@@ -8,6 +7,10 @@ open Mechanics
 open System
 open Animations
 open Init
+
+
+let solveSolver (gameState, timeout) =
+    async { return Solver.Solve(gameState, timeout) }
 
 
 let update (msg : Msg) (state : State) =
@@ -27,14 +30,14 @@ let update (msg : Msg) (state : State) =
         ]
 
     | PageResize (x, y) ->
-        { fst (init false) with ScreenWidth = x; ScreenHeight = y; Worker = state.Worker },
+        { fst (init false) with ScreenWidth = x; ScreenHeight = y },
         match state.AnimationTimer with Some t -> Cmd.ofMsg (StopTimer t) | _ -> Cmd.none
 
     | StartTimer ->
         state,
         match state.AnimationTimer with
         | Some t -> Cmd.none
-        | _ -> Cmd.ofSub (fun dispatch ->
+        | _ -> Cmd.ofEffect (fun dispatch ->
                 let tick _ = dispatch Tick
                 let interval = 1000 / TargetFPS
                 let timer = Browser.Dom.window.setInterval(tick, interval)
@@ -48,7 +51,7 @@ let update (msg : Msg) (state : State) =
         match state.Phase with
         | Intro1 ->
             { state with AnimationTimer = None; Phase = Intro2 },
-            Cmd.ofSub (fun dispatch ->
+            Cmd.ofEffect (fun dispatch ->
                 Browser.Dom.window.setTimeout((fun _ -> dispatch IntroFinished), 1000) |> ignore)
         | _ ->
             { state with AnimationTimer = None }, Cmd.none
@@ -92,28 +95,14 @@ let update (msg : Msg) (state : State) =
         Console.info "* IDLE"
         { state with IdleCheckInProgress = false
                      Idle = true
-                     WorkerTimeout = SolverInitialTimeout
+                     SolverTimeout = SolverInitialTimeout
                      AnimationQueue = [] },
-        let gameState = Workers.Solver.CreateGameState state
-        if Workers.Solver.IsSolved gameState
+        let gameState = Solver.CreateGameState state
+        if Solver.IsSolved gameState
         then Cmd.none
         else
-            Console.info "Executing worker"
-            Cmd.Worker.exec state.Worker (gameState, SolverInitialTimeout) Solution
-
-    | SetWorker w -> { state with Worker = Some w }, Cmd.none
-
-    | ChangeWorkerState workerStatus ->
-        Console.info("Worker status:", workerStatus)
-        state,
-        match workerStatus with
-        | WorkerStatus.TimeoutExpired
-        | WorkerStatus.Killed ->
-            Console.info "Restarting worker"
-            Cmd.batch [
-                Cmd.Worker.restart state.Worker
-                Cmd.ofMsg IdleCheck ]
-        | _ -> Cmd.none
+            Console.info "Executing solver"
+            Cmd.OfAsync.perform solveSolver (gameState, SolverInitialTimeout) Solution
 
     | Solution (solutionType, solution) ->
         if not state.Idle then state, Cmd.none
@@ -121,12 +110,12 @@ let update (msg : Msg) (state : State) =
         let solverTimeout =
             match solutionType, solution with
             | Partial _, [] ->
-                Console.info("Increasing solver timeout to", state.WorkerTimeout + SolverTimeoutStep)
-                state.WorkerTimeout + SolverTimeoutStep
-            | _ -> state.WorkerTimeout
+                Console.info("Increasing solver timeout to", state.SolverTimeout + SolverTimeoutStep)
+                state.SolverTimeout + SolverTimeoutStep
+            | _ -> state.SolverTimeout
 
-        { state with AnimationQueue = state.AnimationQueue @ Workers.Solver.SolutionToPaths solution
-                     WorkerTimeout = solverTimeout }, Cmd.batch [
+        { state with AnimationQueue = state.AnimationQueue @ Solver.SolutionToPaths solution
+                     SolverTimeout = solverTimeout }, Cmd.batch [
             Cmd.ofMsg StartTimer
             match solutionType with
             | Complete ->
@@ -139,8 +128,8 @@ let update (msg : Msg) (state : State) =
                     Console.warn "Failed to solve, giving up"
                     Cmd.none
                 else
-                    Console.info "Executing worker on partially solved state"
-                    Cmd.Worker.exec state.Worker (partiallySolvedState, solverTimeout) Solution
+                    Console.info "Executing solver on partially solved state"
+                    Cmd.OfAsync.perform solveSolver (partiallySolvedState, solverTimeout) Solution
          ]
 
     | Shuffle ->

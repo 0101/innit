@@ -1,7 +1,6 @@
 [<AutoOpen>]
 module Types
 
-open Feliz.UseWorker
 open System
 
 
@@ -62,8 +61,6 @@ type Msg =
     | Solution of SolutionType * Solution
     | Shuffle
     | IntroFinished
-    | SetWorker of Worker<GameState * float, SolutionType * Solution>
-    | ChangeWorkerState of WorkerStatus
 
 type ItemContent =
     | Link of string
@@ -99,7 +96,4 @@ type State =
       IdleCheckInProgress: bool
       Idle: bool
       Phase: Phase
-      Worker: Worker<GameState * float, SolutionType * Solution> option
-      WorkerTimeout: float }
-    interface System.IDisposable with
-        member this.Dispose() = this.Worker |> Option.iter (fun w -> w.Dispose())
+      SolverTimeout: float }

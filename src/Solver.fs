@@ -1,9 +1,7 @@
-module Workers.Solver
+module Solver
 
 open Mechanics
 open System
-
-open Feliz.UseWorker
 
 
 let CreateGameState (state : State) : GameState =
@@ -94,6 +92,3 @@ let Solve (gameState: GameState, timeout: float) : SolutionType * Position list 
 
 
 let SolutionToPaths s = s |> List.map ToCoords |> SegmentPath
-
-
-let WorkerSolve = WorkerFunc.Create("Solver", "WorkerSolve", Solve)
