@@ -18,7 +18,7 @@ let ``Simple solver solution works`` () empty piece target =
         GridW = 4
         GridH = 4
         EmptySpace = empty
-        Pieces = set [{ Position = piece; Targets = [|target|] }]
+        Pieces = set [{ Position = piece; Targets = [target] }]
     }
 
     let sType, solution = Solve (gs, SolverInitialTimeout)
@@ -31,7 +31,7 @@ let ``Simple solver solution works`` () empty piece target =
 
 [<Property(Arbitrary = [| typeof<IntBetween0and3> |])>]
 let ``Solution to a solved state is empty`` gs =
-    let gs = { gs with Pieces = set [{ Position = (0, 0); Targets = [|0, 0|] }] }
+    let gs = { gs with Pieces = set [{ Position = (0, 0); Targets = [0, 0] }] }
 
     Assert.True (IsSolved gs)
 
@@ -50,9 +50,9 @@ let ``Solution doesn't contain any back&forth moves`` () =
         GridH = h
         EmptySpace = locations.[0]
         Pieces = set [
-            { Position = locations.[1]; Targets = [| locations.[2] |] }
-            { Position = locations.[3]; Targets = [| locations.[4] |] }
-            { Position = locations.[5]; Targets = [| locations.[6] |] }
+            { Position = locations.[1]; Targets = [locations.[2]] }
+            { Position = locations.[3]; Targets = [locations.[4]] }
+            { Position = locations.[5]; Targets = [locations.[6]] }
         ]
     }
     let _, solution = Solve (gs, SolverInitialTimeout)
@@ -70,9 +70,9 @@ let ``Moving back & forth doesn't change the state`` () =
         GridH = h
         EmptySpace = x, y
         Pieces = set [
-            { Position = locations.[1]; Targets = [| locations.[2] |] }
-            { Position = locations.[3]; Targets = [| locations.[4] |] }
-            { Position = locations.[5]; Targets = [| locations.[6] |] }
+            { Position = locations.[1]; Targets = [locations.[2]] }
+            { Position = locations.[3]; Targets = [locations.[4]] }
+            { Position = locations.[5]; Targets = [locations.[6]] }
         ]
     }
     let gs' =
@@ -125,8 +125,8 @@ let ``Two pieces with shared targets on 4x4 grid are solved correctly`` () =
         GridH = 4
         EmptySpace = (0, 0)
         Pieces = set [
-            { Position = (2, 1); Targets = [| (1, 1); (1, 2) |] }
-            { Position = (2, 2); Targets = [| (1, 1); (1, 2) |] }
+            { Position = (2, 1); Targets = [(1, 1); (1, 2)] }
+            { Position = (2, 2); Targets = [(1, 1); (1, 2)] }
         ]
     }
 

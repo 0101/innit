@@ -33,7 +33,7 @@ let parsePair (o: obj) : int * int = readInt o 0, readInt o 1
 let parsePiece (p: obj) : GamePiece =
     let targets : obj array = p?Targets
     { Position = parsePair p?Position
-      Targets = targets |> Array.map parsePair }
+      Targets = targets |> Array.map parsePair |> Array.toList }
 
 let parseWorkerResponse (event: obj) : SolutionType * Solution =
     let data : obj = event?data

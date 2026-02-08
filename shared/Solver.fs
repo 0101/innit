@@ -10,12 +10,12 @@ let CreateGameState (state : State) : GameState =
       GridH = GridHeight state.Grid
       EmptySpace = int ex, int ey
       Pieces = GetPieces state.Grid |> Set.map (fun (position, targets) -> {
-          Position = position
-          Targets = targets |> Seq.map coordsToPosition |> Seq.toArray
+          GamePiece.Position = position
+          Targets = targets |> Seq.map coordsToPosition |> Seq.toList
       }) }
 
 
-let PieceOnTarget p = p.Targets |> Array.contains p.Position
+let PieceOnTarget (p: GamePiece) = p.Targets |> List.contains p.Position
 
 
 let IsSolved state = state.Pieces |> Set.forall PieceOnTarget
@@ -41,7 +41,7 @@ let ApplyMove move state =
 let Distance (x1, y1) (x2, y2) = abs (x1 - x2) + abs (y1 - y2)
 
 
-let DistanceToTarget piece = piece.Targets |> Seq.map (Distance piece.Position) |> Seq.min
+let DistanceToTarget (piece: GamePiece) = piece.Targets |> Seq.map (Distance piece.Position) |> Seq.min
 
 
 let DistanceToEmpty state =

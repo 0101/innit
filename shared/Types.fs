@@ -37,7 +37,7 @@ type Solution = Position list
 
 type GamePiece =
     { Position: Position
-      Targets: Position array }
+      Targets: Position list }
 
 type GameState =
     { GridW: int
@@ -47,20 +47,30 @@ type GameState =
 
 type SolutionType = Complete | Partial of GameState
 
+type WireGamePiece =
+    { Position: Position
+      Targets: Position array }
+
 type WireGameState =
     { WireGridW: int
       WireGridH: int
       WireEmptySpace: Position
-      WirePieces: GamePiece array }
+      WirePieces: WireGamePiece array }
 
 module Wire =
+    let pieceToWire (p: GamePiece) : WireGamePiece =
+        { Position = p.Position; Targets = List.toArray p.Targets }
+
+    let wireToPiece (wp: WireGamePiece) : GamePiece =
+        { Position = wp.Position; Targets = Array.toList wp.Targets }
+
     let gameStateToWire (gs: GameState) : WireGameState =
         { WireGridW = gs.GridW; WireGridH = gs.GridH; WireEmptySpace = gs.EmptySpace
-          WirePieces = Set.toArray gs.Pieces }
+          WirePieces = gs.Pieces |> Set.toArray |> Array.map pieceToWire }
 
     let wireToGameState (ws: WireGameState) : GameState =
         { GridW = ws.WireGridW; GridH = ws.WireGridH; EmptySpace = ws.WireEmptySpace
-          Pieces = Set.ofArray ws.WirePieces }
+          Pieces = ws.WirePieces |> Array.map wireToPiece |> Set.ofArray }
 
 /////////////////////
 
