@@ -95,3 +95,42 @@ let ``Solver can solve real world use cases`` screen =
         Assert.True (IsSolved solvedGs, sprintf "Complete but not solved: %A" solvedGs)
     | Partial _ ->
         ()
+
+
+[<Property(Arbitrary = [| typeof<IntBetween100and2000> |])>]
+let ``Chained solve eventually completes or stays partial`` screen =
+    let state, _ = Init.initialSetup screen false |> Update.update Shuffle
+    let initialGs = CreateGameState state
+
+    let rec chain gs iteration =
+        if iteration >= 20 then None
+        else
+            match Solve (gs, 0.1) with
+            | Complete, solution -> Some (gs, solution)
+            | Partial partialGs, _ -> chain partialGs (iteration + 1)
+
+    match chain initialGs 0 with
+    | Some (lastInputGs, finalSolution) ->
+        let solvedGs = finalSolution |> List.fold (fun gs move -> gs |> ApplyMove move) lastInputGs
+        Assert.True (IsSolved solvedGs, sprintf "Chained solve reached Complete but not IsSolved: %A" solvedGs)
+    | None ->
+        ()
+
+
+[<Fact>]
+let ``Two pieces with shared targets on 4x4 grid are solved correctly`` () =
+    let gs = {
+        GridW = 4
+        GridH = 4
+        EmptySpace = (0, 0)
+        Pieces = set [
+            { Position = (2, 1); Targets = [| (1, 1); (1, 2) |] }
+            { Position = (2, 2); Targets = [| (1, 1); (1, 2) |] }
+        ]
+    }
+
+    let sType, solution = Solve (gs, SolverMaxTimeout * 2.0)
+
+    Assert.Equal(Complete, sType)
+    let solvedGs = solution |> List.fold (fun gs move -> gs |> ApplyMove move) gs
+    Assert.True (IsSolved solvedGs, sprintf "Shared-target pieces not solved: %A" solvedGs)
