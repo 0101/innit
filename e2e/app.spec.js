@@ -152,8 +152,7 @@ test.describe("Phase 3b: Shuffle + Solve Verification", () => {
 });
 
 test.describe("Phase 4: Web Worker", () => {
-  // Tagged as expected failure - solver currently runs on main thread
-  test.fixme(
+  test(
     "Web worker created for solver",
     async ({ page }) => {
       const workers = [];
