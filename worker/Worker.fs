@@ -15,8 +15,9 @@ let parsePair (o: obj) : int * int = readInt o 0, readInt o 1
 
 let parsePiece (p: obj) : GamePiece =
     let targets : obj array = p?Targets
+    let targetPositions : Position array = targets |> Array.map parsePair
     { Position = parsePair p?Position
-      Targets = targets |> Array.map parsePair |> Array.toList }
+      Targets = targetPositions |> List.ofArray }
 
 let parseGameState (raw: obj) : GameState =
     let rawPieces : obj array = raw?WirePieces
