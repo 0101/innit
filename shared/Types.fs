@@ -58,6 +58,10 @@ module Wire =
         { WireGridW = gs.GridW; WireGridH = gs.GridH; WireEmptySpace = gs.EmptySpace
           WirePieces = Set.toArray gs.Pieces }
 
+    let wireToGameState (ws: WireGameState) : GameState =
+        { GridW = ws.WireGridW; GridH = ws.WireGridH; EmptySpace = ws.WireEmptySpace
+          Pieces = Set.ofArray ws.WirePieces }
+
 /////////////////////
 
 type Msg =

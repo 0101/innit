@@ -1,6 +1,7 @@
 module SolverTests
 
 open System
+open System.Text.Json
 open Xunit
 open FsCheck
 open FsCheck.Xunit
@@ -134,3 +135,40 @@ let ``Two pieces with shared targets on 4x4 grid are solved correctly`` () =
     Assert.Equal(Complete, sType)
     let solvedGs = solution |> List.fold (fun gs move -> gs |> ApplyMove move) gs
     Assert.True (IsSolved solvedGs, sprintf "Shared-target pieces not solved: %A" solvedGs)
+
+
+[<Property(Arbitrary = [| typeof<IntBetween100and400> |])>]
+let ``Wire round-trip preserves GameState equality`` screen =
+    let state, _ = Init.initialSetup screen false |> Update.update Shuffle
+    let gs = CreateGameState state
+
+    let wire = Wire.gameStateToWire gs
+    let json = JsonSerializer.Serialize(wire)
+    let deserialized = JsonSerializer.Deserialize<WireGameState>(json)
+    let roundTripped = Wire.wireToGameState deserialized
+
+    Assert.Equal(gs.GridW, roundTripped.GridW)
+    Assert.Equal(gs.GridH, roundTripped.GridH)
+    Assert.Equal(gs.EmptySpace, roundTripped.EmptySpace)
+    Assert.Equal<GamePiece Set>(gs.Pieces, roundTripped.Pieces)
+    Assert.Equal(gs, roundTripped)
+
+
+[<Property(Arbitrary = [| typeof<IntBetween100and400> |])>]
+let ``Solve-through-wire produces correct solution`` screen =
+    let state, _ = Init.initialSetup screen false |> Update.update Shuffle
+    let gs = CreateGameState state
+
+    let wire = Wire.gameStateToWire gs
+    let json = JsonSerializer.Serialize(wire)
+    let deserialized = JsonSerializer.Deserialize<WireGameState>(json)
+    let decodedGs = Wire.wireToGameState deserialized
+
+    let sType, solution = Solve (decodedGs, SolverMaxTimeout * 2.0)
+
+    match sType with
+    | Complete ->
+        let solvedGs = solution |> List.fold (fun gs move -> gs |> ApplyMove move) decodedGs
+        Assert.True (IsSolved solvedGs, sprintf "Solve-through-wire Complete but not solved: %A" solvedGs)
+    | Partial _ ->
+        ()
