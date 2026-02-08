@@ -23,6 +23,7 @@ let InitialEmptySquare = 0, 0
 let ContactEmail = "nbjmup;nbjmAjooju/d{" |> Seq.map (int >> ((+) -1) >> char >> string) |> String.concat ""
 let ScLink = "https://soundcloud.com/architech"
 let GhLink = "https://github.com/0101"
+let SpLink = "https://open.spotify.com/artist/1A9tG644srKp6tTXn4qSBb"
 
 let IdleSeconds = 2.0
 

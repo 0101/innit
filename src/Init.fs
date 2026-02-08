@@ -59,6 +59,7 @@ let initialSetup (screenW, screenH) intro =
             { Hue = 000; Class = "mail"; Content = Link ContactEmail }
             { Hue = 024; Class = "sc"; Content = LinkNew ScLink }
             { Hue = 192; Class = "gh"; Content = LinkNew GhLink }
+            { Hue = 141; Class = "sp"; Content = LinkNew SpLink }
         ]
         LastUpdate = DateTime.Now
         IdleCheckInProgress = false

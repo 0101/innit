@@ -63,6 +63,8 @@ let NoSurroundings xy = set [ xy ]
 
 
 let RandomLocations surroundings (random : Random) (gridW, gridH) =
+    let marginX = max 1 (gridW / 7)
+    let marginY = max 1 (gridH / 7)
     let rec getLocationsFrom available = seq {
         if not (Set.isEmpty available) then
             let loc = available |> Set.toSeq |> Seq.sortBy (fun _ -> random.Next()) |> Seq.head
@@ -70,8 +72,8 @@ let RandomLocations surroundings (random : Random) (gridW, gridH) =
             yield loc
             yield! getLocationsFrom (Set.difference available removeLocations)
     }
-    getLocationsFrom (set [ for x in [1..gridW - 2] do
-                            for y in [1..gridH - 2] do x, y ])
+    getLocationsFrom (set [ for x in [marginX..gridW - 1 - marginX] do
+                            for y in [marginY..gridH - 1 - marginY] do x, y ])
 
 
 let FullyRandomLocations r = RandomLocations NoSurroundings r
