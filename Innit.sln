@@ -7,6 +7,10 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "App", "src\App.fsproj", "{7
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "test", "test\test.fsproj", "{F981A0DA-BB21-4D32-AC17-2890D973CAC0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shared", "shared", "{4F52FD11-658E-A102-6CD3-7D7C16FFA15B}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Shared", "shared\Shared.fsproj", "{1F6D0307-DAEE-40E2-9B5E-B5262A51D635}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,9 +19,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{78B391CA-8F98-42AA-9A0D-D442469ACECC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -44,5 +45,23 @@ Global
 		{F981A0DA-BB21-4D32-AC17-2890D973CAC0}.Release|x64.Build.0 = Release|Any CPU
 		{F981A0DA-BB21-4D32-AC17-2890D973CAC0}.Release|x86.ActiveCfg = Release|Any CPU
 		{F981A0DA-BB21-4D32-AC17-2890D973CAC0}.Release|x86.Build.0 = Release|Any CPU
+		{1F6D0307-DAEE-40E2-9B5E-B5262A51D635}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F6D0307-DAEE-40E2-9B5E-B5262A51D635}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F6D0307-DAEE-40E2-9B5E-B5262A51D635}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1F6D0307-DAEE-40E2-9B5E-B5262A51D635}.Debug|x64.Build.0 = Debug|Any CPU
+		{1F6D0307-DAEE-40E2-9B5E-B5262A51D635}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1F6D0307-DAEE-40E2-9B5E-B5262A51D635}.Debug|x86.Build.0 = Debug|Any CPU
+		{1F6D0307-DAEE-40E2-9B5E-B5262A51D635}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F6D0307-DAEE-40E2-9B5E-B5262A51D635}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F6D0307-DAEE-40E2-9B5E-B5262A51D635}.Release|x64.ActiveCfg = Release|Any CPU
+		{1F6D0307-DAEE-40E2-9B5E-B5262A51D635}.Release|x64.Build.0 = Release|Any CPU
+		{1F6D0307-DAEE-40E2-9B5E-B5262A51D635}.Release|x86.ActiveCfg = Release|Any CPU
+		{1F6D0307-DAEE-40E2-9B5E-B5262A51D635}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1F6D0307-DAEE-40E2-9B5E-B5262A51D635} = {4F52FD11-658E-A102-6CD3-7D7C16FFA15B}
 	EndGlobalSection
 EndGlobal

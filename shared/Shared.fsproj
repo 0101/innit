@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Types.fs" />
+    <Compile Include="Wire.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Mechanics.fs" />
     <Compile Include="Solver.fs" />

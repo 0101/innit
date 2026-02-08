@@ -8,6 +8,7 @@ open FsCheck.Xunit
 
 open Mechanics
 open Solver
+open Wire
 
 
 [<Property(Arbitrary = [| typeof<IntBetween0and3> |])>]
