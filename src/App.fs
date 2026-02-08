@@ -42,8 +42,20 @@ let solverSubscription _ =
         { new System.IDisposable with member _.Dispose() = () } ]
 
 
+open Fable.Core
+
+[<Emit("window.shuffle = $0")>]
+let setWindowShuffle (f: unit -> unit) : unit = jsNative
+
+let consoleApi _ =
+    [ ["console-api"], fun dispatch ->
+        setWindowShuffle (fun () -> dispatch Shuffle)
+        { new System.IDisposable with member _.Dispose() = () } ]
+
+
 Program.mkProgram (fun () -> init true) update view
 |> Program.withSubscription resize
 |> Program.withSubscription solverSubscription
+|> Program.withSubscription consoleApi
 |> Program.withReactSynchronous "elmish-app"
 |> Program.run

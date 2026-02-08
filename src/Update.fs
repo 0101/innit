@@ -183,4 +183,9 @@ let update (msg : Msg) (state : State) =
         let locations = FullyRandomLocations state.Rng (GridWidth grid, GridHeight grid) |> Seq.take pieces.Count
         Seq.zip pieces locations
         |> Seq.iter (fun ((currentLoc, _), newLoc) -> Swap grid currentLoc newLoc)
-        state, Cmd.none
+        { state with Idle = false
+                     AnimationQueue = []
+                     LastUpdate = DateTime.Now },
+        Cmd.batch [
+            if state.IdleCheckInProgress then Cmd.none else Cmd.ofMsg IdleCheck
+        ]
