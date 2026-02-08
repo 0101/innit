@@ -300,6 +300,8 @@ __pycache__/
 # Fable 4 output
 src/**/*.fs.js
 src/fable_modules/
+shared/**/*.fs.js
+shared/fable_modules/
 
 # Agents scratchpad
 .agents/

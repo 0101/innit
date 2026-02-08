@@ -3,6 +3,7 @@
     <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\shared\Shared.fsproj" />
     <ProjectReference Include="..\src\App.fsproj" />
   </ItemGroup>
   <ItemGroup>
