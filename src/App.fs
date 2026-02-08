@@ -34,7 +34,16 @@ let resize _ =
         { new System.IDisposable with member _.Dispose() = () } ]
 
 
+let solverSubscription _ =
+    [ ["solver-worker"], fun dispatch ->
+        workerOnMessage solverWorker (fun event ->
+            let solutionType, solution = parseWorkerResponse event
+            Solution (solutionType, solution) |> dispatch)
+        { new System.IDisposable with member _.Dispose() = () } ]
+
+
 Program.mkProgram (fun () -> init true) update view
 |> Program.withSubscription resize
+|> Program.withSubscription solverSubscription
 |> Program.withReactSynchronous "elmish-app"
 |> Program.run

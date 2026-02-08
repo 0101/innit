@@ -47,6 +47,17 @@ type GameState =
 
 type SolutionType = Complete | Partial of GameState
 
+type WireGameState =
+    { WireGridW: int
+      WireGridH: int
+      WireEmptySpace: Position
+      WirePieces: GamePiece array }
+
+module Wire =
+    let gameStateToWire (gs: GameState) : WireGameState =
+        { WireGridW = gs.GridW; WireGridH = gs.GridH; WireEmptySpace = gs.EmptySpace
+          WirePieces = Set.toArray gs.Pieces }
+
 /////////////////////
 
 type Msg =

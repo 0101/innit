@@ -18,8 +18,8 @@
 - **Build tooling**: Vite + `dotnet fable` (NOT `vite-plugin-fable` — alpha, no workers)
 - **Shared project**: `shared/Shared.fsproj` containing pure logic (Types, Utils, Mechanics, Solver) — referenced by both `src/App.fsproj` and `worker/Worker.fsproj`. Console.fs stays in `src/` (browser dependency, not used by worker)
 - **Worker**: Separate `worker/Worker.fsproj` compiled with `dotnet fable worker -o worker-out`
-- **Worker bundling**: Vite native `new Worker(new URL(..., import.meta.url))`
-- **Worker serialization**: Not needed — both sides are Fable-compiled JS, `postMessage` handles JS objects natively
+- **Worker bundling**: Vite native `new Worker(new URL(..., import.meta.url), { type: "module" })` -- must specify `type: "module"` since Fable output uses ES imports
+- **Worker serialization**: `postMessage` uses structured clone which cannot transfer Fable `Set` (contains compare functions) or Fable `Record` class instances. Solution: convert `GameState.Pieces` from `Set` to plain array via `WireGameState` type before posting, reconstruct with `JSON.parse(JSON.stringify(...))` to strip class prototypes, and manually reconstruct Fable types from plain objects on the receiving side
 - **Deploy action**: v4 with `GITHUB_TOKEN` (standard, no PAT required)
 
 ## Decisions
@@ -28,4 +28,5 @@
 - .NET 9 over .NET 10: .NET 10 still in preview, upgrade later when it reaches LTS
 - Separate `.fsproj` for worker: Only viable approach for Fable web workers
 - Shared project over duplication: Worker can't reference App.fsproj (Fable compiles all files, including browser-dependent ones that break in worker context)
-- No serialization library: Both sides are Fable JS, postMessage handles objects natively
+- No serialization library: Both sides are Fable JS, but still need manual conversion at postMessage boundary due to Fable's Set/Record types not being structured-clonable
+- Worker must use `{ type: "module" }`: Fable-compiled JS uses ES module imports; Vite defaults to classic workers which can't use `import`

@@ -1,6 +1,7 @@
 module Update
 
 open Elmish
+open Fable.Core
 
 open Rendering
 open Mechanics
@@ -9,8 +10,49 @@ open Animations
 open Init
 
 
-let solveSolver (gameState, timeout) =
-    async { return Solver.Solve(gameState, timeout) }
+[<Emit("""new Worker(new URL("../worker-out/Worker.js", import.meta.url), { type: "module" })""")>]
+let createSolverWorker () : obj = jsNative
+
+[<Emit("$0.postMessage(JSON.parse(JSON.stringify($1)))")>]
+let workerPostMessage (worker: obj) (data: obj) : unit = jsNative
+
+[<Emit("$0.onmessage = $1")>]
+let workerOnMessage (worker: obj) (handler: obj -> unit) : unit = jsNative
+
+let solverWorker = createSolverWorker ()
+
+let postSolverRequest gameState timeout =
+    workerPostMessage solverWorker (Wire.gameStateToWire gameState, timeout)
+
+open Fable.Core.JsInterop
+
+let inline readInt (o: obj) (idx: int) : int = o?(idx)
+
+let parsePair (o: obj) : int * int = readInt o 0, readInt o 1
+
+let parsePiece (p: obj) : GamePiece =
+    let targets : obj array = p?Targets
+    { Position = parsePair p?Position
+      Targets = targets |> Array.map parsePair }
+
+let parseWorkerResponse (event: obj) : SolutionType * Solution =
+    let data : obj = event?data
+    let tag : int = data?tag
+    let rawSolution : obj array = data?solution
+    let solution : Position list =
+        rawSolution |> Array.map parsePair |> Array.toList
+    let solutionType =
+        match tag with
+        | 1 ->
+            let ws : obj = data?wireState
+            let rawPieces : obj array = ws?WirePieces
+            let pieces = rawPieces |> Array.map parsePiece |> Set.ofArray
+            Partial { GridW = ws?WireGridW
+                      GridH = ws?WireGridH
+                      EmptySpace = parsePair ws?WireEmptySpace
+                      Pieces = pieces }
+        | _ -> Complete
+    solutionType, solution
 
 let delayThenReturn msg (ms: int) =
     async {
@@ -105,7 +147,7 @@ let update (msg : Msg) (state : State) =
         then Cmd.none
         else
             Console.info "Executing solver"
-            Cmd.OfAsync.perform solveSolver (gameState, SolverInitialTimeout) Solution
+            Cmd.ofEffect (fun _ -> postSolverRequest gameState SolverInitialTimeout)
 
     | Solution (solutionType, solution) ->
         if not state.Idle then state, Cmd.none
@@ -132,7 +174,7 @@ let update (msg : Msg) (state : State) =
                     Cmd.none
                 else
                     Console.info "Executing solver on partially solved state"
-                    Cmd.OfAsync.perform solveSolver (partiallySolvedState, solverTimeout) Solution
+                    Cmd.ofEffect (fun _ -> postSolverRequest partiallySolvedState solverTimeout)
          ]
 
     | Shuffle ->

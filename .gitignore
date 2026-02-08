@@ -302,6 +302,7 @@ src/**/*.fs.js
 src/fable_modules/
 shared/**/*.fs.js
 shared/fable_modules/
+worker-out/
 
 # Agents scratchpad
 .agents/

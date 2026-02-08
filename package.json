@@ -1,8 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "start": "dotnet fable watch src --run npx vite",
-    "build": "dotnet fable src && npx vite build"
+    "start": "dotnet fable watch worker -o worker-out & dotnet fable watch src --run npx vite",
+    "build": "dotnet fable worker -o worker-out && dotnet fable src && npx vite build"
   },
   "dependencies": {
     "react": "^18.3.1",
