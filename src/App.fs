@@ -53,9 +53,14 @@ let consoleApi _ =
         { new System.IDisposable with member _.Dispose() = () } ]
 
 
+let subscriptions model =
+    Sub.batch [
+        resize model
+        solverSubscription model
+        consoleApi model
+    ]
+
 Program.mkProgram (fun () -> init true) update view
-|> Program.withSubscription resize
-|> Program.withSubscription solverSubscription
-|> Program.withSubscription consoleApi
+|> Program.withSubscription subscriptions
 |> Program.withReactSynchronous "elmish-app"
 |> Program.run
