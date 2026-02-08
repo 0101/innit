@@ -312,6 +312,12 @@ connect.*
 # Claude Code
 .claude/
 
+# Beads task tracking
+.beads/
+
 # .NET local config (except tool manifest)
 .config/*
 !.config/dotnet-tools.json
+
+# bv (beads viewer) local config and caches
+.bv/

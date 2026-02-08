@@ -12,6 +12,12 @@ open Init
 let solveSolver (gameState, timeout) =
     async { return Solver.Solve(gameState, timeout) }
 
+let delayThenReturn msg (ms: int) =
+    async {
+        do! Async.Sleep ms
+        return msg
+    }
+
 
 let update (msg : Msg) (state : State) =
     match msg with
@@ -86,10 +92,7 @@ let update (msg : Msg) (state : State) =
         let secondsSinceUpdate = (DateTime.Now - state.LastUpdate).TotalSeconds
         if secondsSinceUpdate >= IdleSeconds
         then Cmd.ofMsg Idle
-        else Cmd.OfAsync.result (async {
-            do! Async.Sleep (int (1000.0 * (IdleSeconds - secondsSinceUpdate)))
-            return IdleCheck
-        })
+        else Cmd.OfAsync.perform (delayThenReturn IdleCheck) (int (1000.0 * (IdleSeconds - secondsSinceUpdate))) id
 
     | Idle ->
         Console.info "* IDLE"

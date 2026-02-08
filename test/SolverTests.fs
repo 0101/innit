@@ -6,7 +6,7 @@ open FsCheck
 open FsCheck.Xunit
 
 open Mechanics
-open Workers.Solver
+open Solver
 
 
 [<Property(Arbitrary = [| typeof<IntBetween0and3> |])>]
