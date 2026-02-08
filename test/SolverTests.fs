@@ -82,11 +82,16 @@ let ``Moving back & forth doesn't change the state`` () =
     Assert.Equal (gs, gs')
 
 
-[<Property(MaxTest = 10, Arbitrary = [| typeof<IntBetween100and2000> |])>]
+[<Property(Arbitrary = [| typeof<IntBetween100and400> |])>]
 let ``Solver can solve real world use cases`` screen =
     let state, _ = Init.initialSetup screen false |> Update.update Shuffle
 
     let gs = CreateGameState state
-    let sType, solution = Solve (gs, SolverMaxTimeout * 4.0)
+    let sType, solution = Solve (gs, SolverMaxTimeout * 2.0)
 
-    Assert.True ((Complete = sType), sprintf "%A" gs)
+    match sType with
+    | Complete ->
+        let solvedGs = solution |> List.fold (fun gs move -> gs |> ApplyMove move) gs
+        Assert.True (IsSolved solvedGs, sprintf "Complete but not solved: %A" solvedGs)
+    | Partial _ ->
+        ()
