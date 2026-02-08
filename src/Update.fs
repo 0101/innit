@@ -22,37 +22,9 @@ let workerOnMessage (worker: obj) (handler: obj -> unit) : unit = jsNative
 let solverWorker = createSolverWorker ()
 
 let postSolverRequest gameState timeout =
-    workerPostMessage solverWorker (Wire.gameStateToWire gameState, timeout)
+    workerPostMessage solverWorker (Wire.encodeGameStateToJs gameState timeout)
 
-open Fable.Core.JsInterop
-
-let inline readInt (o: obj) (idx: int) : int = o?(idx)
-
-let parsePair (o: obj) : int * int = readInt o 0, readInt o 1
-
-let parsePiece (p: obj) : GamePiece =
-    let targets : obj array = p?Targets
-    { Position = parsePair p?Position
-      Targets = targets |> Array.map parsePair |> Array.toList }
-
-let parseWorkerResponse (event: obj) : SolutionType * Solution =
-    let data : obj = event?data
-    let tag : int = data?tag
-    let rawSolution : obj array = data?solution
-    let solution : Position list =
-        rawSolution |> Array.map parsePair |> Array.toList
-    let solutionType =
-        match tag with
-        | 1 ->
-            let ws : obj = data?wireState
-            let rawPieces : obj array = ws?WirePieces
-            let pieces = rawPieces |> Array.map parsePiece |> Set.ofArray
-            Partial { GridW = ws?WireGridW
-                      GridH = ws?WireGridH
-                      EmptySpace = parsePair ws?WireEmptySpace
-                      Pieces = pieces }
-        | _ -> Complete
-    solutionType, solution
+let parseWorkerResponse = Wire.parseWorkerResponseFromJs
 
 let delayThenReturn msg (ms: int) =
     async {
@@ -78,7 +50,7 @@ let update (msg : Msg) (state : State) =
         ]
 
     | PageResize (x, y) ->
-        { fst (init false) with ScreenWidth = x; ScreenHeight = y },
+        { fst (init false) with ScreenWidth = x; ScreenHeight = y; SolverTimeout = state.SolverTimeout },
         match state.AnimationTimer with Some t -> Cmd.ofMsg (StopTimer t) | _ -> Cmd.none
 
     | StartTimer ->

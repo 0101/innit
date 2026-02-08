@@ -2,6 +2,7 @@ module App
 
 open Elmish
 open Elmish.React
+open Fable.Core
 open Fable.React
 open Fable.React.Props
 
@@ -26,12 +27,21 @@ let view (state : State) dispatch =
     ]
 
 
+[<Emit("window.onresize = null")>]
+let clearWindowOnResize () : unit = jsNative
+
+[<Emit("$0.onmessage = null")>]
+let clearOnMessage (worker: obj) : unit = jsNative
+
+[<Emit("window.shuffle = $0")>]
+let setWindowShuffle (f: obj) : unit = jsNative
+
 let resize _ =
     [ ["resize"], fun dispatch ->
         Browser.Dom.window.onresize <- (fun _ ->
             let dims = int Browser.Dom.window.innerWidth * 1<Px>, int Browser.Dom.window.innerHeight * 1<Px>
             PageResize dims |> dispatch)
-        { new System.IDisposable with member _.Dispose() = () } ]
+        { new System.IDisposable with member _.Dispose() = clearWindowOnResize () } ]
 
 
 let solverSubscription _ =
@@ -39,18 +49,13 @@ let solverSubscription _ =
         workerOnMessage solverWorker (fun event ->
             let solutionType, solution = parseWorkerResponse event
             Solution (solutionType, solution) |> dispatch)
-        { new System.IDisposable with member _.Dispose() = () } ]
+        { new System.IDisposable with member _.Dispose() = clearOnMessage solverWorker } ]
 
-
-open Fable.Core
-
-[<Emit("window.shuffle = $0")>]
-let setWindowShuffle (f: unit -> unit) : unit = jsNative
 
 let consoleApi _ =
     [ ["console-api"], fun dispatch ->
         setWindowShuffle (fun () -> dispatch Shuffle)
-        { new System.IDisposable with member _.Dispose() = () } ]
+        { new System.IDisposable with member _.Dispose() = setWindowShuffle null } ]
 
 
 let subscriptions model =
