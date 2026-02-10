@@ -13,18 +13,58 @@ open Init
 [<Emit("""new Worker(new URL("../../worker-out/Worker.js", import.meta.url), { type: "module" })""")>]
 let createSolverWorker () : obj = jsNative
 
-[<Emit("$0.postMessage(JSON.parse(JSON.stringify($1)))")>]
+[<Emit("$0.postMessage($1)")>]
 let workerPostMessage (worker: obj) (data: obj) : unit = jsNative
 
 [<Emit("$0.onmessage = $1")>]
 let workerOnMessage (worker: obj) (handler: obj -> unit) : unit = jsNative
 
+open Fable.Core.JsInterop
+
 let solverWorker = createSolverWorker ()
 
-let postSolverRequest gameState timeout =
-    workerPostMessage solverWorker (Wire.encodeGameStateToJs gameState timeout)
+let gameStateToJs (gs: GameState) : obj =
+    createObj [
+        "GridW" ==> gs.GridW
+        "GridH" ==> gs.GridH
+        "EmptySpace" ==> [| fst gs.EmptySpace; snd gs.EmptySpace |]
+        "Pieces" ==> (gs.Pieces |> Set.toArray |> Array.map (fun p ->
+            createObj [
+                "Position" ==> [| fst p.Position; snd p.Position |]
+                "Targets" ==> (p.Targets |> Array.map (fun t -> [| fst t; snd t |]))
+            ]))
+    ]
 
-let parseWorkerResponse = Wire.parseWorkerResponseFromJs
+let postSolverRequest gameState timeout =
+    workerPostMessage solverWorker [| gameStateToJs gameState; box timeout |]
+
+let inline readInt (o: obj) (idx: int) : int = o?(idx)
+
+let parsePair (o: obj) : int * int = readInt o 0, readInt o 1
+
+let parsePiece (p: obj) : GamePiece =
+    let targets : obj array = p?Targets
+    { Position = parsePair p?Position
+      Targets = targets |> Array.map parsePair }
+
+let parseGameStateFromJs (raw: obj) : GameState =
+    let rawPieces : obj array = raw?Pieces
+    { GridW = raw?GridW
+      GridH = raw?GridH
+      EmptySpace = parsePair raw?EmptySpace
+      Pieces = rawPieces |> Array.map parsePiece |> Set.ofArray }
+
+let parseWorkerResponse (event: obj) : SolutionType * Solution =
+    let data : obj = event?data
+    let tag : int = data?tag
+    let rawSolution : obj array = data?solution
+    let solution : Solution =
+        rawSolution |> Array.map parsePair |> Array.toList
+    let solutionType =
+        match tag with
+        | 1 -> Partial (parseGameStateFromJs data?state)
+        | _ -> Complete
+    solutionType, solution
 
 let delayThenReturn msg (ms: int) =
     async {

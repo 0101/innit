@@ -1,15 +1,12 @@
 module SolverTests
 
 open System
-open System.Text.Json
 open Xunit
 open FsCheck
 open FsCheck.Xunit
 
 open Mechanics
 open Solver
-open Wire
-
 
 [<Property(Arbitrary = [| typeof<IntBetween0and3> |])>]
 let ``Simple solver solution works`` () empty piece target =
@@ -19,7 +16,7 @@ let ``Simple solver solution works`` () empty piece target =
         GridW = 4
         GridH = 4
         EmptySpace = empty
-        Pieces = set [{ Position = piece; Targets = [target] }]
+        Pieces = set [{ Position = piece; Targets = [|target|] }]
     }
 
     let sType, solution = Solve (gs, SolverInitialTimeout)
@@ -32,7 +29,7 @@ let ``Simple solver solution works`` () empty piece target =
 
 [<Property(Arbitrary = [| typeof<IntBetween0and3> |])>]
 let ``Solution to a solved state is empty`` gs =
-    let gs = { gs with Pieces = set [{ Position = (0, 0); Targets = [0, 0] }] }
+    let gs = { gs with Pieces = set [{ Position = (0, 0); Targets = [|0, 0|] }] }
 
     Assert.True (IsSolved gs)
 
@@ -51,9 +48,9 @@ let ``Solution doesn't contain any back&forth moves`` () =
         GridH = h
         EmptySpace = locations.[0]
         Pieces = set [
-            { Position = locations.[1]; Targets = [locations.[2]] }
-            { Position = locations.[3]; Targets = [locations.[4]] }
-            { Position = locations.[5]; Targets = [locations.[6]] }
+            { Position = locations.[1]; Targets = [|locations.[2]|] }
+            { Position = locations.[3]; Targets = [|locations.[4]|] }
+            { Position = locations.[5]; Targets = [|locations.[6]|] }
         ]
     }
     let _, solution = Solve (gs, SolverInitialTimeout)
@@ -71,9 +68,9 @@ let ``Moving back & forth doesn't change the state`` () =
         GridH = h
         EmptySpace = x, y
         Pieces = set [
-            { Position = locations.[1]; Targets = [locations.[2]] }
-            { Position = locations.[3]; Targets = [locations.[4]] }
-            { Position = locations.[5]; Targets = [locations.[6]] }
+            { Position = locations.[1]; Targets = [|locations.[2]|] }
+            { Position = locations.[3]; Targets = [|locations.[4]|] }
+            { Position = locations.[5]; Targets = [|locations.[6]|] }
         ]
     }
     let gs' =
@@ -126,8 +123,8 @@ let ``Two pieces with shared targets on 4x4 grid are solved correctly`` () =
         GridH = 4
         EmptySpace = (0, 0)
         Pieces = set [
-            { Position = (2, 1); Targets = [(1, 1); (1, 2)] }
-            { Position = (2, 2); Targets = [(1, 1); (1, 2)] }
+            { Position = (2, 1); Targets = [|(1, 1); (1, 2)|] }
+            { Position = (2, 2); Targets = [|(1, 1); (1, 2)|] }
         ]
     }
 
@@ -136,40 +133,3 @@ let ``Two pieces with shared targets on 4x4 grid are solved correctly`` () =
     Assert.Equal(Complete, sType)
     let solvedGs = solution |> List.fold (fun gs move -> gs |> ApplyMove move) gs
     Assert.True (IsSolved solvedGs, sprintf "Shared-target pieces not solved: %A" solvedGs)
-
-
-[<Property(Arbitrary = [| typeof<IntBetween100and400> |])>]
-let ``Wire round-trip preserves GameState equality`` screen =
-    let state, _ = Init.initialSetup screen false |> Update.update Shuffle
-    let gs = CreateGameState state
-
-    let wire = Wire.gameStateToWire gs
-    let json = JsonSerializer.Serialize(wire)
-    let deserialized = JsonSerializer.Deserialize<WireGameState>(json)
-    let roundTripped = Wire.wireToGameState deserialized
-
-    Assert.Equal(gs.GridW, roundTripped.GridW)
-    Assert.Equal(gs.GridH, roundTripped.GridH)
-    Assert.Equal(gs.EmptySpace, roundTripped.EmptySpace)
-    Assert.Equal<GamePiece Set>(gs.Pieces, roundTripped.Pieces)
-    Assert.Equal(gs, roundTripped)
-
-
-[<Property(Arbitrary = [| typeof<IntBetween100and400> |])>]
-let ``Solve-through-wire produces correct solution`` screen =
-    let state, _ = Init.initialSetup screen false |> Update.update Shuffle
-    let gs = CreateGameState state
-
-    let wire = Wire.gameStateToWire gs
-    let json = JsonSerializer.Serialize(wire)
-    let deserialized = JsonSerializer.Deserialize<WireGameState>(json)
-    let decodedGs = Wire.wireToGameState deserialized
-
-    let sType, solution = Solve (decodedGs, SolverMaxTimeout * 2.0)
-
-    match sType with
-    | Complete ->
-        let solvedGs = solution |> List.fold (fun gs move -> gs |> ApplyMove move) decodedGs
-        Assert.True (IsSolved solvedGs, sprintf "Solve-through-wire Complete but not solved: %A" solvedGs)
-    | Partial _ ->
-        ()

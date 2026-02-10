@@ -35,9 +35,31 @@ type Animation =
 type Position = int * int
 type Solution = Position list
 
+[<CustomEquality; CustomComparison>]
 type GamePiece =
     { Position: Position
-      Targets: Position list }
+      // Array (not list) because F# lists do not survive postMessage structured clone
+      Targets: Position array }
+
+    override this.Equals(obj) =
+        match obj with
+        | :? GamePiece as other ->
+            this.Position = other.Position
+            && this.Targets.Length = other.Targets.Length
+            && Array.forall2 (=) this.Targets other.Targets
+        | _ -> false
+
+    override this.GetHashCode() =
+        hash (this.Position, this.Targets |> Array.toList)
+
+    interface System.IComparable with
+        member this.CompareTo(obj) =
+            match obj with
+            | :? GamePiece as other ->
+                match compare this.Position other.Position with
+                | 0 -> compare (Array.toList this.Targets) (Array.toList other.Targets)
+                | c -> c
+            | _ -> invalidArg "obj" "Cannot compare different types"
 
 type GameState =
     { GridW: int

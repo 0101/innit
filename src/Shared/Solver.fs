@@ -11,11 +11,11 @@ let CreateGameState (state : State) : GameState =
       EmptySpace = int ex, int ey
       Pieces = GetPieces state.Grid |> Set.map (fun (position, targets) -> {
           GamePiece.Position = position
-          Targets = targets |> Seq.map coordsToPosition |> Seq.toList
+          Targets = targets |> Seq.map coordsToPosition |> Seq.toArray
       }) }
 
 
-let PieceOnTarget (p: GamePiece) = p.Targets |> List.contains p.Position
+let PieceOnTarget (p: GamePiece) = p.Targets |> Array.contains p.Position
 
 
 let IsSolved state = state.Pieces |> Set.forall PieceOnTarget
