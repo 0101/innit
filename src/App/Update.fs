@@ -10,7 +10,7 @@ open Animations
 open Init
 
 
-[<Emit("""new Worker(new URL("../worker-out/Worker.js", import.meta.url), { type: "module" })""")>]
+[<Emit("""new Worker(new URL("../../worker-out/Worker.js", import.meta.url), { type: "module" })""")>]
 let createSolverWorker () : obj = jsNative
 
 [<Emit("$0.postMessage(JSON.parse(JSON.stringify($1)))")>]

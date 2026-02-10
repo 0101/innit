@@ -1,8 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "start": "dotnet fable watch worker -o worker-out & dotnet fable watch src --run npx vite",
-    "build": "dotnet fable worker -o worker-out && dotnet fable src && npx vite build",
+    "start": "dotnet fable watch src/Worker -o worker-out & dotnet fable watch src/App --run npx vite",
+    "build": "dotnet fable src/Worker -o worker-out && dotnet fable src/App && npx vite build",
     "test:e2e": "npm run build && npx playwright test"
   },
   "dependencies": {

@@ -31,8 +31,8 @@ jobs:
 
     - name: Build
       run: |
-        dotnet fable worker -o worker-out
-        dotnet fable src
+        dotnet fable src/Worker -o worker-out
+        dotnet fable src/App
         npx vite build
 
     - name: Deploy

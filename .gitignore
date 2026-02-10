@@ -299,8 +299,9 @@ __pycache__/
 
 # Fable 4 output
 **/*.fs.js
-src/fable_modules/
-shared/fable_modules/
+src/App/fable_modules/
+src/Shared/fable_modules/
+src/Worker/fable_modules/
 worker-out/
 
 # Agents scratchpad

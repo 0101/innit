@@ -3,8 +3,8 @@
     <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\shared\Shared.fsproj" />
-    <ProjectReference Include="..\src\App.fsproj" />
+    <ProjectReference Include="..\src\Shared\Shared.fsproj" />
+    <ProjectReference Include="..\src\App\App.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TestUtils.fs" />
