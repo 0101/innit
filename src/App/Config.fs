@@ -8,7 +8,15 @@ let PxPerSq = (float SquareSize) * 1.0<Px/Sq>
 let AnimationStep = 0.4<Sq>
 let TargetFPS = 40
 
-let _getChars = Seq.map (fun i -> (char) i) >> Seq.filter (Char.IsControl >> not) >> Seq.toArray
+let private isDisplayChar c =
+    Char.IsLetterOrDigit c || Char.IsPunctuation c ||
+    match Char.GetUnicodeCategory c with
+    | Globalization.UnicodeCategory.MathSymbol
+    | Globalization.UnicodeCategory.CurrencySymbol
+    | Globalization.UnicodeCategory.ModifierSymbol -> true
+    | _ -> false
+
+let _getChars = Seq.map (fun i -> (char) i) >> Seq.filter isDisplayChar >> Seq.toArray
 let BasicChars = _getChars [0..127]
 let AllChars = _getChars [0..56000]
 
