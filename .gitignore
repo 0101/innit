@@ -296,3 +296,31 @@ __pycache__/
 *.xsd.cs
 .fable
 .ionide
+
+# Fable 4 output
+**/*.fs.js
+src/App/fable_modules/
+src/Shared/fable_modules/
+src/Worker/fable_modules/
+worker-out/
+
+# Agents scratchpad
+.agents/
+
+# Dev container (local-only setup)
+.devcontainer/
+init.*
+connect.*
+
+# Claude Code
+.claude/
+
+# Beads task tracking
+.beads/
+
+# .NET local config (except tool manifest)
+.config/*
+!.config/dotnet-tools.json
+
+# bv (beads viewer) local config and caches
+.bv/

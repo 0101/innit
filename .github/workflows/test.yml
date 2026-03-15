@@ -1,32 +1,43 @@
 name: Build & Test
 
 on:
-  # push:
-  #   branches: [ master ]
   pull_request:
     branches: [ master ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 3.1.101
-    - name: Install dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-    - name: Test
-      run: dotnet test --no-restore --verbosity normal test
+    - uses: actions/checkout@v4
 
-    - name: Use Node.js
-      uses: actions/setup-node@v1
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
       with:
-        node-version: '16.x'
-    - run: npm install
-    - run: npm run build
+        dotnet-version: 9.0.x
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install dependencies
+      run: |
+        dotnet tool restore
+        dotnet restore
+        npm install
+
+    - name: Test
+      run: dotnet test --verbosity normal test
+
+    - name: Build
+      run: |
+        dotnet fable src/Worker -o worker-out
+        dotnet fable src/App
+        npx vite build
+
+    - name: Install Playwright
+      run: npx playwright install chromium --with-deps
+
+    - name: E2E tests
+      run: npx playwright test
