@@ -29,7 +29,6 @@ Two compilers see this code: .NET (for `dotnet test`) and Fable (for the browser
 | Types.fs | Domain types: grid coordinates (`Sq` measure), pieces, game state, solver types, UI state, messages |
 | Mechanics.fs | Grid operations: random path generation, path segmentation, piece swapping, position randomization |
 | Solver.fs | A* best-first search with timeout; returns Complete or Partial with best state for chaining |
-| Wire.fs | Serialization bridge for Web Worker messaging (F# types <-> plain JS objects) |
 | Utils.fs | `mapSnd`, `coordsToPosition` |
 
 ### App/ (browser UI)
@@ -63,8 +62,8 @@ The app progresses through three phases:
 ### Solver Pipeline
 
 1. User stops interacting for 2 seconds
-2. App converts grid state to `GameState` (positions + targets), serializes to `WireGameState`
-3. Worker deserializes, runs A* search with timeout (starts at 0.5s)
+2. App sends `GameState` directly to worker via `postMessage`
+3. Worker parses the structured-clone'd object, runs A* search with timeout (starts at 0.5s)
 4. If **Complete**: solution moves queued for animation
 5. If **Partial**: best state returned, timeout increased (up to 2.5s), solver re-invoked with partial state
 
@@ -79,15 +78,13 @@ I, N appear twice each. Rather than assigning each piece a unique target, duplic
 - Each `Tick` (25ms) advances pieces 0.4 squares toward their target
 - Grid array is mutated in-place during animation (justified: Elmish is single-threaded)
 
-### Worker Serialization
+### Worker Communication
 
-Web Workers use structured clone for `postMessage`, which cannot handle:
-- Fable `Set<'a>` (contains compare functions)
-- Fable record instances (prototypes break equality after cloning)
+Web Workers use structured clone for `postMessage`. F# records compile to plain JS objects and arrays survive structured clone, so `GameState` is sent directly without a serialization layer.
 
-Solution: `Wire.fs` converts between `GameState` (F# records with `Position list` for structural equality) and `WireGameState` (plain arrays). `JSON.parse(JSON.stringify(...))` strips prototypes before posting.
+**Key design choice**: `GamePiece.Targets` uses `Position array` (not list) because F# lists don't survive structured clone. `[<CustomEquality; CustomComparison>]` on `GamePiece` ensures arrays compare by contents, preserving Set deduplication in the solver.
 
-**Critical**: `GamePiece.Targets` must be `Position list` (not array). Arrays use reference equality in Fable JS, which breaks Set membership and state deduplication in the solver.
+`SolutionType` DU doesn't survive structured clone (prototype chains lost), so the worker encodes responses as plain JS objects with `tag`/`state`/`solution` fields.
 
 ### Elmish Subscription Gotcha
 
@@ -117,7 +114,6 @@ Elmish 4.4.0's `Program.withSubscription` **replaces** the subscription function
 - **Solver correctness**: single-piece solves, already-solved returns empty, no backtracking in solutions
 - **Chained solving**: repeated partial solves eventually complete
 - **Shared targets**: duplicate-letter piece substitution works
-- **Wire round-trip**: GameState survives serialization and solver still produces correct results
 
 ### E2E Tests (npm run test:e2e)
 
