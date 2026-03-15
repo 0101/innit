@@ -35,3 +35,9 @@ jobs:
         dotnet fable src/Worker -o worker-out
         dotnet fable src/App
         npx vite build
+
+    - name: Install Playwright
+      run: npx playwright install chromium --with-deps
+
+    - name: E2E tests
+      run: npx playwright test
