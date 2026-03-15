@@ -23,6 +23,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        dotnet tool restore
         dotnet restore
         npm install
 
